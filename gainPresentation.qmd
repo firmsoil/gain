@@ -5,7 +5,7 @@ author: "GAIN Engineering Architecture Team"
 date: "2026-09-14"
 format:
   revealjs:
-    theme: [dark, default]
+    theme: [white, default]
     slide-number: true
     preview-links: auto
     transition: slide
@@ -24,7 +24,7 @@ format:
     css: style.css
 ---
 
-## Executive Overview: The Paradigm Shift {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Executive Overview: The Paradigm Shift
 
 ### Moving from "Vibe Coding" to Spec-Driven Engineering
 
@@ -55,7 +55,7 @@ format:
 
 ---
 
-## The Core Invariant: The Inverted Lifecycle {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## The Core Invariant: The Inverted Lifecycle
 
 ### Intent Precedes Implementation
 
@@ -92,7 +92,7 @@ Every stage must pass automated consistency gates (`/speckit.analyze`) before im
 
 ---
 
-## The 9-Stage Spec Kit Lifecycle in GAIN {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## The 9-Stage Spec Kit Lifecycle in GAIN
 
 ### Engineering Governance via Versioned Markdown Artifacts
 
@@ -110,7 +110,7 @@ Every stage must pass automated consistency gates (`/speckit.analyze`) before im
 
 ---
 
-## Thin Vertical Slice Strategy {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Thin Vertical Slice Strategy
 
 ### De-risking Delivery by Proving the Critical Path First
 
@@ -149,7 +149,7 @@ Phase 1 validated end-to-end telemetry flow, storage, and mathematics **before**
 
 ---
 
-## Human Authority & AI Governance {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Human Authority & AI Governance
 
 ### Package `002-requirements-jira-sdd`: Demoting AI to Non-Authoritative Drafts
 
@@ -190,7 +190,7 @@ def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
 
 ---
 
-## Decoupling External Trackers: Jira as an Adapter {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Decoupling External Trackers: Jira as an Adapter
 
 ### The Trap: Letting Issue Trackers Dictate Architecture
 
@@ -226,7 +226,7 @@ GAIN operates with **zero Jira dependency** in pure Git/SDD mode, while supporti
 
 ---
 
-## Executable Contracts & Data Quality Engine {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Executable Contracts & Data Quality Engine
 
 ### Machine-Verifiable Semantic Guardrails
 
@@ -258,7 +258,7 @@ GAIN operates with **zero Jira dependency** in pure Git/SDD mode, while supporti
 
 ---
 
-## 4-Tier Pipeline & Deterministic Replayability {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## 4-Tier Pipeline & Deterministic Replayability
 
 ### Audit Provenance & Offline Verifiability
 
@@ -289,7 +289,7 @@ flowchart LR
 
 ---
 
-## Live Case Study: Validation on Spinnaker Telemetry {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Live Case Study: Validation on Spinnaker Telemetry
 
 ### Testing Real-World Telemetry: `firmsoil/spinnaker` & `spinnaker/spinnaker`
 
@@ -319,7 +319,7 @@ flowchart LR
 
 ---
 
-## Strategic ROI & Enterprise Architecture Impact {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Strategic ROI & Enterprise Architecture Impact
 
 ### Why Spec-Driven Development is Essential for AI-Native Organizations
 
@@ -351,7 +351,7 @@ flowchart LR
 
 ---
 
-## Conclusion & Repository Architecture Map {data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)"}
+## Conclusion & Repository Architecture Map
 
 ### The Specification Portfolio as Single Source of Truth
 
