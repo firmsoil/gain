@@ -74,6 +74,7 @@
       display: flex !important;
       flex-direction: column !important;
       justify-content: flex-start !important;
+      overflow: visible !important;
     }
 
     /* Headings */
@@ -420,6 +421,7 @@
       margin: 8px auto 14px auto;
       box-sizing: border-box;
       gap: 10px;
+      overflow: visible;
     }
 
     .pipeline-step {
@@ -469,7 +471,9 @@
       color: var(--f100-navy);
       line-height: 1.25;
       margin-bottom: 4px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
+      word-break: keep-all;
     }
 
     .pipeline-step .step-sub {
@@ -482,7 +486,9 @@
       border: 1px solid #e2e8f0;
       line-height: 1.2;
       font-family: 'JetBrains Mono', monospace;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
+      word-break: keep-all;
     }
 
     .pipeline-step.step-final .step-sub {
@@ -515,6 +521,7 @@
       margin: 6px auto 12px auto;
       box-sizing: border-box;
       gap: 8px;
+      overflow: visible;
     }
 
     .gov-node {
@@ -558,7 +565,9 @@
       color: var(--f100-navy);
       line-height: 1.2;
       margin-bottom: 3px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
+      word-break: keep-all;
     }
 
     .gov-sub {
@@ -569,7 +578,8 @@
       padding: 2px 6px;
       border-radius: 4px;
       border: 1px solid rgba(0, 0, 0, 0.08);
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     .gov-dual-target {
@@ -610,7 +620,7 @@
       font-size: 0.56em;
       font-weight: 600;
       color: var(--f100-navy);
-      white-space: nowrap;
+      white-space: normal;
     }
 
     /* Native 4-Tier Data Pipeline (Zero-Truncation Guaranteed) */
@@ -627,6 +637,7 @@
       margin: 6px auto 12px auto;
       box-sizing: border-box;
       gap: 12px;
+      overflow: visible;
     }
 
     .tier-step {
@@ -664,7 +675,9 @@
       color: var(--f100-navy);
       line-height: 1.25;
       margin-bottom: 3px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
+      word-break: keep-all;
     }
 
     .tier-step .tier-code {
@@ -677,14 +690,16 @@
       border-radius: 4px;
       border: 1px solid #bfdbfe;
       margin-bottom: 3px;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     .tier-step .tier-sub {
       font-size: 0.5em;
       color: var(--f100-slate-600);
       line-height: 1.2;
-      white-space: nowrap;
+      white-space: normal;
+      text-align: center;
     }
 
     /* Stat Pill Box */
