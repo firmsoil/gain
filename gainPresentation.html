@@ -17,7 +17,7 @@
 
   <style>
     /* ==========================================================================
-       FORTUNE 100 CORPORATE PRESENTATION THEME (PUNCHY GRADIENTS & SHADING)
+       FORTUNE 100 CORPORATE PRESENTATION THEME (LARGE EXECUTIVE FORMAT)
        ========================================================================== */
     :root {
       --f100-navy-deep: #050d1a;
@@ -35,7 +35,7 @@
       --f100-slate-300: #cbd5e1;
       --f100-slate-200: #e2e8f0;
       --f100-slate-100: #f1f5f9;
-      --f100-bg-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 60%, #edf2f7 100%);
+      --f100-bg-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 55%, #edf2f7 100%);
       --f100-white: #ffffff;
 
       /* Status Colors */
@@ -55,20 +55,21 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Scaled up base typography */
     .reveal {
-      font-size: 24px;
+      font-size: 28px;
       font-weight: 400;
       color: var(--f100-slate-800);
     }
 
-    /* Prevent slide content from clipping or overflowing */
     .reveal .slides {
       text-align: left;
     }
 
+    /* Full-area flex layout for each slide */
     .reveal .slides section {
-      padding: 24px 36px 36px 36px !important;
-      height: 100%;
+      padding: 30px 48px 24px 48px !important;
+      height: 100% !important;
       top: 0 !important;
       display: flex !important;
       flex-direction: column !important;
@@ -89,66 +90,66 @@
     }
 
     .reveal h2 {
-      font-size: 1.45em;
+      font-size: 1.6em;
       font-weight: 800;
       color: var(--f100-navy);
       line-height: 1.2;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
       display: flex;
       align-items: center;
       gap: 12px;
     }
 
     .reveal h3 {
-      font-size: 0.98em;
+      font-size: 1.1em;
       font-weight: 600;
       color: var(--f100-cobalt);
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .reveal h4 {
-      font-size: 0.88em;
+      font-size: 0.98em;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
-    /* Section Top Kicker & Accents */
+    /* Kicker Breadcrumb */
     .slide-kicker {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.52em;
+      font-size: 0.54em;
       font-weight: 700;
       color: var(--f100-slate-500);
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      border-bottom: 1px solid var(--f100-slate-200);
-      padding-bottom: 4px;
-      margin-bottom: 10px;
+      border-bottom: 1.5px solid var(--f100-slate-200);
+      padding-bottom: 6px;
+      margin-bottom: 12px;
     }
     .slide-kicker .kicker-brand {
       color: var(--f100-navy);
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .slide-kicker .kicker-brand::before {
       content: "";
       display: inline-block;
-      width: 8px;
-      height: 8px;
+      width: 10px;
+      height: 10px;
       background: linear-gradient(135deg, #2563eb, #0ea5e9);
       border-radius: 2px;
     }
 
-    /* Corporate Badges */
+    /* Badges */
     .corporate-pill {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
+      gap: 8px;
+      padding: 6px 16px;
       border-radius: 9999px;
-      font-size: 0.7em;
+      font-size: 0.75em;
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -157,29 +158,34 @@
       background: rgba(255, 255, 255, 0.15);
       border: 1px solid rgba(255, 255, 255, 0.3);
       color: #ffffff;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
     }
 
-    /* Grid Layouts with Auto Spacing */
+    /* Column Grids that Stretch Vertically */
     .columns {
       display: grid;
-      gap: 16px;
-      margin-top: 6px;
-      margin-bottom: 8px;
+      gap: 22px;
+      margin-top: 8px;
+      margin-bottom: 12px;
+      flex: 1;
+      align-items: stretch;
     }
     .col-50-50 { grid-template-columns: 1fr 1fr; }
     .col-45-55 { grid-template-columns: 45% 55%; }
     .col-3 { grid-template-columns: repeat(3, 1fr); }
 
-    /* Punchy Panels with Modern Shading & Gradients */
+    /* Punchy Cards Filling Vertical Space */
     .panel-card {
       background: linear-gradient(145deg, #ffffff 0%, #f9fafb 100%);
       border: 1px solid var(--f100-slate-200);
-      border-radius: 8px;
-      padding: 14px 18px;
-      box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 4px -1px rgba(15, 23, 42, 0.03);
+      border-radius: 10px;
+      padding: 20px 24px;
+      box-shadow: 0 6px 20px -2px rgba(15, 23, 42, 0.07), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
       position: relative;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
     .panel-card::before {
@@ -188,15 +194,15 @@
       top: 0;
       left: 0;
       right: 0;
-      height: 3px;
+      height: 4px;
       background: linear-gradient(90deg, #1e3a8a, #3b82f6);
-      opacity: 0.8;
+      opacity: 0.9;
     }
 
     .card-critical {
       background: linear-gradient(145deg, #ffffff 0%, #fef2f2 100%);
       border: 1px solid #fecaca;
-      box-shadow: 0 4px 16px -2px rgba(220, 38, 38, 0.08);
+      box-shadow: 0 6px 20px -2px rgba(220, 38, 38, 0.09);
     }
     .card-critical::before {
       background: linear-gradient(90deg, #b91c1c, #ef4444);
@@ -208,7 +214,7 @@
     .card-success {
       background: linear-gradient(145deg, #ffffff 0%, #f0fdf4 100%);
       border: 1px solid #a7f3d0;
-      box-shadow: 0 4px 16px -2px rgba(5, 150, 105, 0.08);
+      box-shadow: 0 6px 20px -2px rgba(5, 150, 105, 0.09);
     }
     .card-success::before {
       background: linear-gradient(90deg, #047857, #10b981);
@@ -220,7 +226,7 @@
     .card-amber {
       background: linear-gradient(145deg, #ffffff 0%, #fffbeb 100%);
       border: 1px solid #fde68a;
-      box-shadow: 0 4px 16px -2px rgba(217, 119, 6, 0.08);
+      box-shadow: 0 6px 20px -2px rgba(217, 119, 6, 0.09);
     }
     .card-amber::before {
       background: linear-gradient(90deg, #b45309, #f59e0b);
@@ -232,7 +238,7 @@
     .card-navy {
       background: linear-gradient(145deg, #ffffff 0%, #eff6ff 100%);
       border: 1px solid #bfdbfe;
-      box-shadow: 0 4px 16px -2px rgba(37, 99, 235, 0.08);
+      box-shadow: 0 6px 20px -2px rgba(37, 99, 235, 0.09);
     }
     .card-navy::before {
       background: linear-gradient(90deg, #1e3a8a, #2563eb);
@@ -241,16 +247,16 @@
       color: var(--f100-navy);
     }
 
-    /* Lists */
+    /* Substantive Body Text & Lists */
     ul, ol {
-      margin: 0 0 0 18px;
+      margin: 0 0 0 22px;
       padding: 0;
-      font-size: 0.78em;
-      line-height: 1.42;
+      font-size: 0.86em;
+      line-height: 1.55;
       color: var(--f100-slate-700);
     }
     li {
-      margin-bottom: 5px;
+      margin-bottom: 8px;
     }
     li:last-child {
       margin-bottom: 0;
@@ -259,31 +265,31 @@
       color: var(--f100-slate-900);
     }
 
-    /* Punchy Callout Boxes */
+    /* Expanded Callout Boxes */
     .callout {
-      border-radius: 8px;
-      padding: 10px 16px;
-      margin: 6px 0 0 0;
-      font-size: 0.78em;
+      border-radius: 10px;
+      padding: 14px 22px;
+      margin-top: 10px;
+      font-size: 0.84em;
       border: 1px solid transparent;
-      box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
     }
     .callout-title {
       font-weight: 700;
-      font-size: 0.9em;
-      margin-bottom: 3px;
+      font-size: 0.95em;
+      margin-bottom: 4px;
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
     .callout-body {
-      line-height: 1.38;
+      line-height: 1.48;
     }
 
     .callout-note {
       background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
       border-color: #bfdbfe;
-      border-left: 5px solid #2563eb;
+      border-left: 6px solid #2563eb;
       color: #1e3a8a;
     }
     .callout-note .callout-title { color: #1e3a8a; }
@@ -291,7 +297,7 @@
     .callout-tip {
       background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
       border-color: #a7f3d0;
-      border-left: 5px solid #059669;
+      border-left: 6px solid #059669;
       color: #065f46;
     }
     .callout-tip .callout-title { color: #065f46; }
@@ -299,43 +305,45 @@
     .callout-important {
       background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
       border-color: #fde68a;
-      border-left: 5px solid #d97706;
+      border-left: 6px solid #d97706;
       color: #92400e;
     }
     .callout-important .callout-title { color: #92400e; }
 
-    /* Compact McKinsey-style Executive Table */
+    /* Centerpiece Executive Matrix Table */
     .table-container {
-      margin-top: 4px;
+      margin-top: 8px;
       width: 100%;
+      flex: 1;
+      display: flex;
     }
     .reveal table {
       width: 100%;
-      font-size: 0.58em;
+      font-size: 0.68em;
       border-collapse: collapse;
       border: 1px solid var(--f100-slate-300);
       background: var(--f100-white);
-      border-radius: 6px;
+      border-radius: 8px;
       overflow: hidden;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.07);
       margin: 0;
     }
     .reveal table th {
       background: linear-gradient(90deg, #0a192f 0%, #0f294a 50%, #1e3a8a 100%);
       color: #ffffff;
-      padding: 7px 10px;
+      padding: 11px 14px;
       font-weight: 700;
       text-align: left;
-      font-size: 0.95em;
+      font-size: 1.0em;
       letter-spacing: 0.04em;
       border-right: 1px solid rgba(255, 255, 255, 0.15);
     }
     .reveal table td {
-      padding: 6px 10px;
+      padding: 9px 14px;
       border-bottom: 1px solid var(--f100-slate-200);
       border-right: 1px solid var(--f100-slate-200);
       color: var(--f100-slate-700);
-      line-height: 1.3;
+      line-height: 1.4;
       background: var(--f100-white);
     }
     .reveal table tr:nth-child(even) td {
@@ -348,87 +356,93 @@
       border-bottom: none;
     }
 
-    /* High Contrast Code Containers */
+    /* Substantial Code Containers */
     .reveal pre {
-      margin: 4px 0 0 0;
+      margin: 6px 0 0 0;
       width: 100%;
-      border-radius: 6px;
+      border-radius: 8px;
       background: #0f172a;
       border: 1px solid #334155;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.15);
+      padding: 14px 18px;
     }
     .reveal code {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68em;
-      line-height: 1.36;
+      font-size: 0.74em;
+      line-height: 1.45;
     }
     p code, li code, td code {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.86em;
+      font-size: 0.88em;
       background: #e2e8f0;
       color: #0f294a;
-      padding: 1px 5px;
+      padding: 2px 6px;
       border-radius: 4px;
       border: 1px solid #cbd5e1;
       font-weight: 600;
     }
 
-    /* Compact Mermaid Architecture Diagram */
+    /* Expanded Mermaid Diagram */
     .mermaid {
       background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 14px 18px;
+      border-radius: 10px;
       border: 1px solid var(--f100-slate-200);
-      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
-      margin: 4px auto 8px auto;
-      max-height: 170px;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
+      margin: 6px auto 12px auto;
+      max-height: 220px;
       width: 100%;
       display: flex;
       justify-content: center;
       align-items: center;
     }
     .mermaid svg {
-      max-height: 155px !important;
-      width: auto !important;
+      max-height: 195px !important;
+      width: 100% !important;
     }
 
-    /* Stat Pill Box for Metrics */
+    /* Stat Pill Box */
     .stat-pill-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 8px;
+      gap: 14px;
+      margin-top: 10px;
+      margin-bottom: 12px;
     }
     .stat-pill {
       background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-      border: 1px solid #bfdbfe;
-      border-radius: 6px;
-      padding: 8px 12px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px 16px;
       text-align: center;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
     }
     .stat-pill .stat-number {
-      font-size: 1.3em;
+      font-size: 1.65em;
       font-weight: 800;
       color: var(--f100-navy);
       display: block;
+      line-height: 1.1;
     }
     .stat-pill .stat-label {
-      font-size: 0.62em;
-      font-weight: 600;
-      color: var(--f100-slate-600);
+      font-size: 0.66em;
+      font-weight: 700;
+      color: var(--f100-cobalt);
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-top: 4px;
+      display: block;
     }
 
-    /* Footer Meta on Slides */
+    /* Slide Footer */
     .slide-footer-bar {
       margin-top: auto;
-      padding-top: 6px;
+      padding-top: 8px;
       border-top: 1px solid var(--f100-slate-200);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.48em;
+      font-size: 0.52em;
       color: var(--f100-slate-500);
       letter-spacing: 0.04em;
     }
@@ -439,25 +453,25 @@
     <div class="slides">
 
       <!-- SLIDE 1: Title Slide (Executive Midnight Navy Gradient) -->
-      <section data-background-gradient="linear-gradient(135deg, #050d1a 0%, #0a1e38 50%, #102a4e 100%)" style="color: #ffffff; justify-content: center !important; padding: 40px 70px !important;">
+      <section data-background-gradient="linear-gradient(135deg, #050d1a 0%, #0a1e38 50%, #102a4e 100%)" style="color: #ffffff; justify-content: center !important; padding: 50px 80px !important;">
         <div>
           <div class="corporate-pill pill-navy">
             FORTUNE 100 ARCHITECTURAL REVIEW &bull; SPEC-DRIVEN ENGINEERING
           </div>
-          <h1 style="color: #ffffff; font-size: 2.3em; margin: 18px 0 12px 0; background: linear-gradient(120deg, #ffffff 30%, #93c5fd 75%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+          <h1 style="color: #ffffff; font-size: 2.7em; margin: 24px 0 16px 0; background: linear-gradient(120deg, #ffffff 30%, #93c5fd 75%, #38bdf8 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
             Spec-Driven Development in the AI-Native Era
           </h1>
-          <h3 style="color: #94a3b8; font-weight: 400; font-size: 1.22em; margin-bottom: 24px;">
+          <h3 style="color: #cbd5e1; font-weight: 400; font-size: 1.35em; margin-bottom: 28px;">
             Architectural Review of GAIN (GitHub AI Intelligence Network)
           </h3>
           
-          <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 8px; padding: 16px 24px; max-width: 1100px; margin-bottom: 24px;">
-            <p style="color: #cbd5e1; font-size: 0.82em; margin: 0; line-height: 1.5;">
+          <div style="background: rgba(255, 255, 255, 0.07); border: 1.5px solid rgba(255, 255, 255, 0.18); border-radius: 10px; padding: 22px 30px; margin-bottom: 30px; box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);">
+            <p style="color: #e2e8f0; font-size: 0.9em; margin: 0; line-height: 1.6;">
               <strong>Strategic Mandate:</strong> As autonomous AI coding agents commoditize syntax synthesis, enterprise engineering must transition from ad-hoc prompt iteration ("vibe coding") to formal, machine-verifiable specifications, executable quality gates, and replayable telemetry architectures.
             </p>
           </div>
 
-          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.2); padding-top: 16px; font-size: 0.72em; color: #94a3b8;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.25); padding-top: 20px; font-size: 0.8em; color: #94a3b8;">
             <span><strong>Author:</strong> GAIN Engineering Architecture Team</span>
             <span><strong>Target Release:</strong> GAIN Production Codebase v0.1.0</span>
             <span><strong>Date:</strong> September 2026</span>
@@ -478,20 +492,20 @@
           <div class="panel-card card-critical">
             <h4>⚠️ Ad-Hoc AI Coding ("Vibe Coding")</h4>
             <ul>
-              <li><strong>Prompt & Hope</strong>: Jumping straight to code generation from conversational prompts.</li>
-              <li><strong>Architectural Drift</strong>: Invariants, domain models, and schemas mutate across AI iterations.</li>
-              <li><strong>Hallucinated Invariants</strong>: Assumptions silently invented by LLMs without validation.</li>
-              <li><strong>Fragile Tech Debt</strong>: Code velocity accelerates, but system predictability collapses.</li>
+              <li><strong>Prompt & Hope</strong>: Jumping straight to code generation from conversational prompts without boundary enforcement.</li>
+              <li><strong>Architectural Drift</strong>: Invariants, domain models, and schemas silently mutate across successive AI iterations.</li>
+              <li><strong>Hallucinated Invariants</strong>: Unverified assumptions invented by LLMs without validation or regression locks.</li>
+              <li><strong>Fragile Tech Debt</strong>: Code velocity accelerates dramatically, but system predictability and enterprise defensibility collapse.</li>
             </ul>
           </div>
 
           <div class="panel-card card-success">
             <h4>🛡️ Spec-Driven Development (SDD)</h4>
             <ul>
-              <li><strong>Spec is the Codebase</strong>: The formal specification is the canonical source of truth.</li>
-              <li><strong>Code as Disposable Artifact</strong>: Code is downstream byproduct synthesized to satisfy contracts.</li>
-              <li><strong>Deterministic Guardrails</strong>: Machine-verifiable schemas, quality rules, and metric definitions.</li>
-              <li><strong>Human Authority</strong>: Strict sign-off gates before code generation or issue promotion.</li>
+              <li><strong>Spec is the Codebase</strong>: The formal specification is the canonical, versioned single source of truth.</li>
+              <li><strong>Code as Disposable Artifact</strong>: Code is downstream byproduct synthesized to satisfy machine-verifiable contracts.</li>
+              <li><strong>Deterministic Guardrails</strong>: Verifiable schemas, quality rules, and metric definitions gate every phase.</li>
+              <li><strong>Human Authority</strong>: Strict sign-off gates required before code generation or backlog issue promotion.</li>
             </ul>
           </div>
         </div>
@@ -529,17 +543,17 @@ flowchart LR
         </div>
 
         <div class="columns col-3">
-          <div class="callout callout-tip">
-            <div class="callout-title">1. Zero Leakage</div>
-            <div class="callout-body">Functional specs define observable behaviors and personas—never implementation tech stacks.</div>
+          <div class="callout callout-tip" style="margin-top: 0; display: flex; flex-direction: column; justify-content: center;">
+            <div class="callout-title">1. Zero Implementation Leakage</div>
+            <div class="callout-body">Functional specs define observable behaviors and personas—never implementation tech stacks or database schemas.</div>
           </div>
-          <div class="callout callout-note">
-            <div class="callout-title">2. Explicit Resolution</div>
-            <div class="callout-body">Uncertain policies (e.g. bot exclusion, backfill windows) resolved in <code>clarifications.md</code> before coding.</div>
+          <div class="callout callout-note" style="margin-top: 0; display: flex; flex-direction: column; justify-content: center;">
+            <div class="callout-title">2. Explicit Ambiguity Resolution</div>
+            <div class="callout-body">Uncertain policies (e.g. bot exclusion, 365d backfills) are resolved in <code>clarifications.md</code> before coding begins.</div>
           </div>
-          <div class="callout callout-important">
-            <div class="callout-title">3. Pre-Code Verification</div>
-            <div class="callout-body">Every stage must pass automated consistency gates (<code>/speckit.analyze</code>) prior to execution.</div>
+          <div class="callout callout-important" style="margin-top: 0; display: flex; flex-direction: column; justify-content: center;">
+            <div class="callout-title">3. Pre-Code Verification Gate</div>
+            <div class="callout-body">Every stage must pass automated consistency gates (<code>/speckit.analyze</code>) prior to any code generation.</div>
           </div>
         </div>
 
@@ -562,7 +576,7 @@ flowchart LR
           <table>
             <thead>
               <tr>
-                <th style="width: 13%;">Stage</th>
+                <th style="width: 14%;">Stage</th>
                 <th style="width: 17%;">Spec Kit Command</th>
                 <th style="width: 20%;">Primary Artifact</th>
                 <th>GAIN Operational Implementation</th>
@@ -646,9 +660,9 @@ flowchart LR
           <div class="panel-card card-amber">
             <h4>The Anti-Pattern: Horizontal Sprawl</h4>
             <ul>
-              <li>Building extensive data models without ingestion.</li>
-              <li>Writing complex UI or reports before validating pipelines.</li>
-              <li>Accumulating unverified assumptions across multiple subsystems simultaneously.</li>
+              <li><strong>Unvalidated Schemas</strong>: Building extensive relational models before proving API ingestion ergonomics.</li>
+              <li><strong>Premature UI/Reporting</strong>: Designing dashboards prior to verifying rate-limits and pagination boundaries.</li>
+              <li><strong>Accumulating Blind Assumptions</strong>: Multi-subsystem integration failures detected late in development.</li>
             </ul>
           </div>
 
@@ -656,22 +670,22 @@ flowchart LR
             <h4>GAIN's Thin Vertical Slice (Phase 1)</h4>
             <pre><code class="language-text">GitHub GraphQL API → Cursor pagination (max 100)
   ↓
-gain.github.client → Transport & rate limits
+gain.github.client → Transport, token auth & rate limits
   ↓
-data/raw/ → Immutable JSONL audit archive
+data/raw/ → Immutable JSONL audit archive + Run ID
   ↓
-gain.schema & gain.model.pr → Canonical validation
+gain.schema & gain.model.pr → Canonical Pydantic normalization
   ↓
 gain.metrics.cycle_time → GAIN-PR-001 (Percentiles)
   ↓
-data/metrics/*.parquet → Verified outputs & demo</code></pre>
+data/metrics/*.parquet → Verified analytics & offline demo</code></pre>
           </div>
         </div>
 
         <div class="callout callout-tip">
           <div class="callout-title">💡 Core Strategic Benefit</div>
           <div class="callout-body">
-            Phase 1 validated end-to-end telemetry flow, storage, and mathematics <strong>before</strong> undertaking Phase 2 (resilience) or Phase 3 (advanced metrics).
+            Phase 1 proved end-to-end telemetry flow, storage, and mathematical accuracy <strong>before</strong> undertaking Phase 2 (resilience, retries) or Phase 3 (advanced batching & multi-repository cohorts).
           </div>
         </div>
 
@@ -706,13 +720,14 @@ flowchart LR
           <div class="panel-card card-navy">
             <h4>Governance Invariants</h4>
             <ul>
-              <li>AI output is <strong>strictly non-authoritative</strong>.</li>
-              <li>Promotion requires named approval: <code>approved_by</code>, <code>approved_at</code>.</li>
+              <li><strong>AI is Non-Authoritative</strong>: LLM output is strictly an untrusted working draft.</li>
+              <li><strong>Explicit Sign-Off Gate</strong>: Promotion requires named human approval metadata: <code>approved_by</code>, <code>approved_at</code>, <code>reviewed_by</code>.</li>
             </ul>
           </div>
 
           <div>
-            <pre><code class="language-python">def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
+            <pre><code class="language-python"># Programmatic Guardrail in src/gain/requirements/sdd.py
+def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
     if story.lifecycle_status != StoryLifecycleStatus.APPROVED:
         raise RequirementValidationError(
             "Only an approved story can be promoted to an SDD spec seed"
@@ -740,18 +755,18 @@ flowchart LR
           <div class="panel-card card-critical">
             <h4>❌ The Jira-Centric Pitfall</h4>
             <ul>
-              <li>Domain models leak Jira schema (<code>customfield_10014</code>, ADF nodes).</li>
-              <li>Workflows halt when Jira API is offline or unauthenticated.</li>
-              <li>Engineering teams locked into external enterprise software.</li>
+              <li><strong>Domain Model Corruption</strong>: Domain models leak proprietary vendor schemas (<code>customfield_10014</code>, Atlassian Document Format).</li>
+              <li><strong>Single Point of Failure</strong>: Development workflows halt when Jira API is offline or unauthenticated.</li>
+              <li><strong>Vendor Lock-in</strong>: Engineering teams are tightly coupled to external issue trackers.</li>
             </ul>
           </div>
 
           <div class="panel-card card-success">
             <h4>✅ GAIN's Hexagonal Architecture</h4>
             <ul>
-              <li><strong>Domain Entity</strong>: <code>CanonicalRequirement</code> is the authoritative model.</li>
-              <li><strong>Decoupled Reference</strong>: Mapped via <code>ExternalReference</code> (<code>external_system</code>, <code>external_key</code>, <code>external_url</code>).</li>
-              <li><strong>Pure Adapter</strong>: <code>gain.requirements.jira</code> isolates ADF formatting and errors.</li>
+              <li><strong>Internal Domain Entity</strong>: <code>CanonicalRequirement</code> is the authoritative model.</li>
+              <li><strong>Decoupled Reference</strong>: External systems mapped via <code>ExternalReference</code> (<code>external_system</code>, <code>external_key</code>, <code>external_url</code>).</li>
+              <li><strong>Pure Adapter Pattern</strong>: <code>gain.requirements.jira</code> isolates ADF formatting, HTTP transport, and error containment.</li>
             </ul>
           </div>
         </div>
@@ -782,8 +797,8 @@ flowchart LR
           <div class="panel-card card-navy">
             <h4>1. Input & Metric Authority</h4>
             <ul>
-              <li><strong>Input Contract</strong>: GraphQL query shape, pagination cursors, rate limits.</li>
-              <li><strong>Metric Catalog Authority</strong>: Calculations validated against versioned catalog:</li>
+              <li><strong>Input Contract</strong>: Validates GraphQL query shapes, pagination cursors, and rate-limit budgets.</li>
+              <li><strong>Metric Catalog Authority</strong>: Calculations strictly validated against versioned catalog definitions:</li>
             </ul>
             <pre><code class="language-python">catalog = MetricCatalog("docs/metrics/metric-catalog.yaml")
 definition = catalog.get("GAIN-PR-001")
@@ -794,14 +809,14 @@ if definition["metric_version"] != CycleTimeMetric.metric_version:
           <div class="panel-card card-navy">
             <h4>2. Programmatic Quality Engine (<code>gain.quality</code>)</h4>
             <ul>
-              <li><strong>Semantic Invariants</strong>:
+              <li><strong>Semantic Invariants Enforced</strong>:
                 <ul>
-                  <li><code>merged_at &lt; created_at</code>: ❌ Strictly invalid.</li>
+                  <li><code>merged_at &lt; created_at</code>: ❌ Strictly invalid (negative duration).</li>
                   <li><code>closed_at &lt; created_at</code>: ❌ Strictly invalid.</li>
                   <li>Duplicate Node IDs: ❌ Detected and flagged.</li>
                 </ul>
               </li>
-              <li><strong>Zero Silent Dropping</strong>: Surfaced in structured <code>normalization_report.json</code>.</li>
+              <li><strong>Zero Silent Dropping</strong>: Every invalid record is surfaced in structured <code>normalization_report.json</code>.</li>
             </ul>
           </div>
         </div>
@@ -845,6 +860,7 @@ flowchart LR
                 <ul>
                   <li><strong>Zero GitHub API re-queries required.</strong></li>
                   <li>Re-run transformations from raw JSONL using <code>gain.storage.replay</code>.</li>
+                  <li>Ensures zero telemetry loss and total audit verifiability.</li>
                 </ul>
               </li>
             </ul>
@@ -870,7 +886,7 @@ flowchart LR
           <div class="panel-card card-amber">
             <h4>Real Bugs Caught by Live Execution</h4>
             <ol>
-              <li><strong>GraphQL Variables</strong>: GitHub rejected unused variables (<code>$since</code>, <code>$until</code>). Fixed in query template.</li>
+              <li><strong>GraphQL Variables</strong>: GitHub rejected queries declaring unused variables (<code>$since</code>, <code>$until</code>). Fixed in query template.</li>
               <li><strong>PR Lifecycle Enum</strong>: GitHub returns <code>MERGED</code> state; previously rejected by strict <code>OPEN/CLOSED</code> validator.</li>
               <li><strong>Token Ergonomics</strong>: Added <code>AliasChoices</code> for seamless <code>GITHUB_TOKEN</code> env variable resolution.</li>
             </ol>
@@ -892,9 +908,9 @@ flowchart LR
                 <span class="stat-label">Merge Rate</span>
               </div>
             </div>
-            <ul style="margin-top: 10px;">
+            <ul>
               <li><strong>60 Merged PRs Analyzed</strong>: Mean cycle time 2.5 days, p90 6.3 days.</li>
-              <li><strong>Flow Balance</strong>: Aug 2026 (93.2% merge rate), Sep 2026 (100% merge rate).</li>
+              <li><strong>Monthly PR Flow Balance</strong>: Aug 2026 (93.2% merge rate), Sep 2026 (100% merge rate).</li>
             </ul>
           </div>
         </div>
@@ -918,7 +934,7 @@ flowchart LR
           <div class="panel-card card-navy">
             <h4>🎯 Predictable Delivery</h4>
             <ul>
-              <li>Guaranteed alignment between PM intent, architectural specs, and AI code generation.</li>
+              <li>Guaranteed alignment between product intent, architectural specs, and AI code synthesis.</li>
               <li>Zero "prompt drift" or architectural corruption across developer iterations.</li>
             </ul>
           </div>
@@ -1002,7 +1018,7 @@ flowchart LR
       theme: 'neutral',
       themeVariables: {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '13px',
+        fontSize: '15px',
         primaryColor: '#eff6ff',
         primaryTextColor: '#0f294a',
         primaryBorderColor: '#2563eb',
