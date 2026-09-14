@@ -67,6 +67,64 @@ cp .env.example .env
 
 The default output directory is `./data` and can be changed through environment variables.
 
+## Live Demo: Spinnaker PR Analytics
+
+GAIN provides an end-to-end live demonstration script ([`scripts/demo_live.py`](scripts/demo_live.py)) that connects directly to the GitHub GraphQL API, ingests real-time pull requests from a live repository, normalizes them into canonical domain models, validates data quality, and outputs both **GAIN-PR-001** cycle-time percentiles and **GAIN-PR-010** monthly flow statistics.
+
+### 1. Run the Live Demo Script against Spinnaker
+
+```bash
+# Provide your GitHub token (or authenticate via `gh auth login`)
+export GITHUB_TOKEN=$(gh auth token)
+
+# Run live PR telemetry analytics against firmsoil/spinnaker
+python scripts/demo_live.py --repo firmsoil/spinnaker --months 2
+```
+
+### 2. Live Demo Pipeline Stages
+
+Executing `scripts/demo_live.py` runs the complete 4-tier pipeline against live GitHub GraphQL endpoints:
+
+1. **Live GraphQL Ingestion**: Queries GitHub's `repository.pullRequests` connection with cursor-based pagination and archives raw JSONL payloads with ingestion metadata into `data/raw/live-spinnaker-<timestamp>/`.
+2. **Canonical Normalization & Quality Checks**: Maps raw records to typed `gain.model.pr.PullRequest` models, ensuring UTC normalization, and verifies invariants (`merged_at >= created_at`, valid state `OPEN`/`CLOSED`/`MERGED`).
+3. **GAIN-PR-001 Cycle Time Computation**: Evaluates observable PR duration from `created_at` to `merged_at` across percentiles (`p50`, `p75`, `p90`, `p95`).
+4. **GAIN-PR-010 Monthly Flow Statistics**: Generates tabular balance sheets across trailing months:
+
+```text
+Month   | Created |  Merged |  Closed | Unmerged | Merge Rate
+--------+---------+---------+---------+----------+-----------
+2026-08 |       0 |       0 |       0 |        0 |        N/A
+2026-09 |       2 |       1 |       1 |        0 |     100.0%
+--------+---------+---------+---------+----------+-----------
+TOTAL   |       2 |       1 |       1 |        0 |     100.0%
+```
+
+### 3. Alternative: Running via the GAIN CLI
+
+You can also run the individual pipeline commands manually:
+
+```bash
+# Configure repository and date window
+export GITHUB_TOKEN=$(gh auth token)
+export GAIN_GITHUB_REPOS="firmsoil/spinnaker"
+export GAIN_START_AT="2026-07-01T00:00:00Z"
+export GAIN_END_AT="2026-09-15T00:00:00Z"
+
+# 1. Backfill live pull requests from GitHub GraphQL
+gain backfill
+
+# 2. Normalize raw ingestion into canonical Parquet
+gain normalize --run-id <run_id>
+
+# 3. Compute cycle time metrics
+gain compute --canonical-path data/canonical/pull_requests__<run_id>.parquet
+
+# 4. Generate monthly created, merged, and closed flow statistics
+gain monthly-stats --canonical-path data/canonical/pull_requests__<run_id>.parquet
+```
+
+> **Offline Demo**: For offline or CI environments without a live GitHub token or network connection, run `python scripts/demo_offline.py` to execute against synthetic pre-recorded fixtures.
+
 ## Tests
 
 ```bash
