@@ -155,14 +155,14 @@ Phase 1 validated end-to-end telemetry flow, storage, and mathematics **before**
 
 ```{mermaid}
 flowchart LR
-    BC["Business Context<br/>(Human Input)"] --> LLM["AI Story Generator<br/>(Schema Constrained)"]
+    BC["Business Context"] --> LLM["AI Story Generator"]
     LLM --> Draft["Generated Draft<br/>(Non-Authoritative)"]
-    Draft --> Gate{"Human Review<br/>& Approval Gate"}
-    Gate -- Rejected --> Revision["Human Revision<br/>& Re-Prompting"]
+    Draft --> Gate["<b>Human Review Gate</b><br/>Sign-Off Required"]
+    Gate -- Approved --> Approved["<b>Canonical Spec</b><br/>Status: APPROVED"]
+    Gate -- Rejected --> Revision["Human Revision<br/>& Refinement"]
     Revision --> Draft
-    Gate -- Approved --> Approved["Canonical Requirement<br/>(Status: APPROVED)"]
     Approved --> SDD["SDD Spec Promotion<br/>(Specification Seed)"]
-    Approved --> Jira["External Projection<br/>(Jira Issue via Adapter)"]
+    Approved --> Jira["External Projection<br/>(Jira Issue Adapter)"]
 ```
 
 :::: {.columns}
@@ -264,10 +264,10 @@ GAIN operates with **zero Jira dependency** in pure Git/SDD mode, while supporti
 
 ```mermaid
 flowchart LR
-    L1["1. Raw API Archive<br/>(data/raw/*.jsonl)<br/>Exact payload + Run ID"] 
-    --> L2["2. In-Memory Normalization<br/>(gain.schema)<br/>Type casting & parsing"]
-    --> L3["3. Canonical Parquet<br/>(data/canonical/*.parquet)<br/>Validated Domain Model"]
-    --> L4["4. Metric Observations<br/>(data/metrics/*.parquet)<br/>Aggregations & Percentiles"]
+    L1["<b>1. Raw API Archive</b><br/><code>data/raw/*.jsonl</code><br/>Payload + Run ID"] 
+    --> L2["<b>2. Normalization</b><br/><code>gain.schema</code><br/>Type Cast & Parsing"]
+    --> L3["<b>3. Canonical Parquet</b><br/><code>data/canonical/</code><br/>Domain Model Invariants"]
+    --> L4["<b>4. Metric Outputs</b><br/><code>data/metrics/</code><br/>Percentiles & Rollups"]
 ```
 
 :::: {.columns}

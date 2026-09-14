@@ -382,23 +382,28 @@
       font-weight: 600;
     }
 
-    /* Expanded Mermaid Diagram */
+    /* Expanded Mermaid Diagram with zero truncation */
     .mermaid {
       background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
-      padding: 14px 18px;
+      padding: 12px 20px;
       border-radius: 10px;
       border: 1px solid var(--f100-slate-200);
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
       margin: 6px auto 12px auto;
       max-height: 220px;
       width: 100%;
+      box-sizing: border-box;
       display: flex;
       justify-content: center;
       align-items: center;
     }
     .mermaid svg {
       max-height: 195px !important;
-      width: 100% !important;
+      width: auto !important;
+      max-width: 100% !important;
+      height: auto !important;
+      display: block;
+      margin: 0 auto;
     }
 
     /* Stat Pill Box */
@@ -519,7 +524,6 @@
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -559,7 +563,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -643,7 +646,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -691,7 +693,6 @@ data/metrics/*.parquet → Verified analytics & offline demo</code></pre>
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -708,12 +709,12 @@ data/metrics/*.parquet → Verified analytics & offline demo</code></pre>
 flowchart LR
     BC["Business Context"] --> LLM["AI Story Generator"]
     LLM --> Draft["Generated Draft<br/>(Non-Authoritative)"]
-    Draft --> Gate{"Human Review<br/>& Approval Gate"}
-    Gate -- Rejected --> Revision["Human Revision"]
+    Draft --> Gate["<b>Human Review Gate</b><br/>Sign-Off Required"]
+    Gate -- Approved --> Approved["<b>Canonical Spec</b><br/>Status: APPROVED"]
+    Gate -- Rejected --> Revision["Human Revision<br/>& Refinement"]
     Revision --> Draft
-    Gate -- Approved --> Approved["Canonical Requirement<br/>(Status: APPROVED)"]
     Approved --> SDD["SDD Spec Seed"]
-    Approved --> Jira["Jira Issue Adapter"]
+    Approved --> Jira["Jira Adapter"]
         </div>
 
         <div class="columns col-50-50">
@@ -738,7 +739,6 @@ def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -780,7 +780,6 @@ def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -823,7 +822,6 @@ if definition["metric_version"] != CycleTimeMetric.metric_version:
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -838,10 +836,10 @@ if definition["metric_version"] != CycleTimeMetric.metric_version:
 
         <div class="mermaid">
 flowchart LR
-    L1["1. Raw API Archive<br/>(data/raw/*.jsonl)<br/>Exact payload + Run ID"] 
-    --> L2["2. In-Memory Normalization<br/>(gain.schema)<br/>Type casting & parsing"]
-    --> L3["3. Canonical Parquet<br/>(data/canonical/*.parquet)<br/>Validated Domain Model"]
-    --> L4["4. Metric Observations<br/>(data/metrics/*.parquet)<br/>Aggregations & Percentiles"]
+    L1["<b>1. Raw API Archive</b><br/><code>data/raw/*.jsonl</code><br/>Payload + Run ID"] 
+    --> L2["<b>2. Normalization</b><br/><code>gain.schema</code><br/>Type Cast & Parsing"]
+    --> L3["<b>3. Canonical Parquet</b><br/><code>data/canonical/</code><br/>Domain Model Invariants"]
+    --> L4["<b>4. Metric Outputs</b><br/><code>data/metrics/</code><br/>Percentiles & Rollups"]
         </div>
 
         <div class="columns col-50-50">
@@ -869,7 +867,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -917,7 +914,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -964,7 +960,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -1000,7 +995,6 @@ flowchart LR
 
         <div class="slide-footer-bar">
           <span>GAIN Spec-Driven Architecture</span>
-          <span>Confidential & Proprietary</span>
         </div>
       </section>
 
@@ -1016,9 +1010,16 @@ flowchart LR
     mermaid.initialize({
       startOnLoad: false,
       theme: 'neutral',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+        nodeSpacing: 35,
+        rankSpacing: 35
+      },
       themeVariables: {
         fontFamily: 'Inter, sans-serif',
-        fontSize: '15px',
+        fontSize: '13px',
         primaryColor: '#eff6ff',
         primaryTextColor: '#0f294a',
         primaryBorderColor: '#2563eb',
