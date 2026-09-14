@@ -406,6 +406,101 @@
       margin: 0 auto;
     }
 
+    /* Native Executive Process Pipeline (Zero-Truncation Guaranteed) */
+    .pipeline-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 1.5px solid var(--f100-slate-200);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      margin: 8px auto 14px auto;
+      box-sizing: border-box;
+      gap: 10px;
+    }
+
+    .pipeline-step {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 12px 10px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+      position: relative;
+    }
+
+    .pipeline-step.step-final {
+      background: linear-gradient(145deg, #eff6ff 0%, #dbeafe 100%);
+      border: 2px solid #2563eb;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+    }
+
+    .pipeline-step .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1e3a8a, #2563eb);
+      color: #ffffff;
+      font-size: 0.52em;
+      font-weight: 800;
+      margin-bottom: 6px;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .pipeline-step.step-final .step-badge {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .pipeline-step .step-title {
+      font-size: 0.65em;
+      font-weight: 700;
+      color: var(--f100-navy);
+      line-height: 1.25;
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+
+    .pipeline-step .step-sub {
+      font-size: 0.54em;
+      font-weight: 600;
+      color: var(--f100-cobalt);
+      background: #f1f5f9;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+      line-height: 1.2;
+      font-family: 'JetBrains Mono', monospace;
+      white-space: nowrap;
+    }
+
+    .pipeline-step.step-final .step-sub {
+      background: #ffffff;
+      border-color: #bfdbfe;
+    }
+
+    .pipeline-chevron {
+      flex-shrink: 0;
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: #94a3b8;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
     /* Stat Pill Box */
     .stat-pill-grid {
       display: grid;
@@ -536,14 +631,48 @@
         <h2>The Core Invariant: The Inverted Lifecycle</h2>
         <h3>Intent Precedes Implementation</h3>
 
-        <div class="mermaid">
-flowchart LR
-    A["<b>1. Constitution</b><br/>Principles"] --> B["<b>2. Spec</b><br/>spec.md"]
-    B --> C["<b>3. Clarify</b><br/>Policy Defaults"]
-    C --> D["<b>4. Plan</b><br/>plan.md"]
-    D --> E["<b>5. Checklist</b><br/>Quality Gate"]
-    E --> F["<b>6. Tasks</b><br/>tasks.md"]
-    F --> G["<b>7. Code</b><br/>src/gain/"]
+        <div class="pipeline-flow">
+          <div class="pipeline-step">
+            <div class="step-badge">1</div>
+            <div class="step-title">Constitution</div>
+            <div class="step-sub">Principles</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step">
+            <div class="step-badge">2</div>
+            <div class="step-title">Specification</div>
+            <div class="step-sub">spec.md</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step">
+            <div class="step-badge">3</div>
+            <div class="step-title">Clarification</div>
+            <div class="step-sub">Policy Defaults</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step">
+            <div class="step-badge">4</div>
+            <div class="step-title">Technical Plan</div>
+            <div class="step-sub">plan.md</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step">
+            <div class="step-badge">5</div>
+            <div class="step-title">Quality Gate</div>
+            <div class="step-sub">Checklists</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step">
+            <div class="step-badge">6</div>
+            <div class="step-title">Tasks</div>
+            <div class="step-sub">tasks.md</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="pipeline-step step-final">
+            <div class="step-badge">7</div>
+            <div class="step-title">Implementation</div>
+            <div class="step-sub">src/gain/</div>
+          </div>
         </div>
 
         <div class="columns col-3">
