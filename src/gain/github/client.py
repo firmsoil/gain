@@ -3,7 +3,7 @@ from __future__ import annotations
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -106,13 +106,15 @@ class GitHubGraphQLClient:
                 pass
         if reset:
             try:
-                now = datetime.now(timezone.utc).timestamp()
+                now = datetime.now(UTC).timestamp()
                 wait = max(0.0, float(reset) - now)
                 if wait > 0:
-                    return min(wait, self.retry_max_backoff_seconds)
+                    return float(min(wait, self.retry_max_backoff_seconds))
             except ValueError:
                 pass
-        return min(self.base_backoff_seconds * (2**attempt), self.retry_max_backoff_seconds)
+        return float(
+            min(self.base_backoff_seconds * (2**attempt), self.retry_max_backoff_seconds)
+        )
 
     def iter_pull_request_pages(
         self,
@@ -131,8 +133,6 @@ class GitHubGraphQLClient:
                     "name": name,
                     "first": self.page_size,
                     "after": cursor,
-                    "since": since.isoformat(),
-                    "until": until.isoformat(),
                 },
             )
             repository = data.get("repository")
@@ -163,7 +163,9 @@ class GitHubGraphQLClient:
             if not page.has_next_page:
                 return
             if not page.end_cursor:
-                raise IncompletePaginationError("GitHub indicated hasNextPage=true but no endCursor")
+                raise IncompletePaginationError(
+                    "GitHub indicated hasNextPage=true but no endCursor"
+                )
             if page.end_cursor == cursor:
                 raise IncompletePaginationError("GitHub returned an unchanged pagination cursor")
             cursor = page.end_cursor

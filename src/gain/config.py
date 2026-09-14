@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from gain.errors import ConfigurationError
@@ -14,7 +14,12 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="GAIN_", env_file=".env", extra="ignore")
 
     github_api_url: str = "https://api.github.com/graphql"
-    github_token: str | None = None
+    github_token: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices(
+            "GAIN_GITHUB_TOKEN", "GITHUB_TOKEN", "gain_github_token", "github_token"
+        ),
+    )
     github_repos: list[str] | str = Field(default_factory=list)
     start_at: datetime = Field(
         default_factory=lambda: datetime(2025, 9, 1, tzinfo=UTC)

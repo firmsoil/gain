@@ -31,7 +31,7 @@ class PullRequest(BaseModel):
     @classmethod
     def validate_state(cls, value: str) -> str:
         normalized = value.upper()
-        if normalized not in {"OPEN", "CLOSED"}:
+        if normalized not in {"OPEN", "CLOSED", "MERGED"}:
             raise ValueError(f"Unsupported pull request state: {value}")
         return normalized
 

@@ -3,9 +3,7 @@ query PullRequestsForRepository(
   $owner: String!,
   $name: String!,
   $first: Int!,
-  $after: String,
-  $since: DateTime!,
-  $until: DateTime!
+  $after: String
 ) {
   repository(owner: $owner, name: $name) {
     id
