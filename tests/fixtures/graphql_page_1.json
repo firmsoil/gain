@@ -1,0 +1,41 @@
+{
+  "data": {
+    "repository": {
+      "id": "R_1",
+      "nameWithOwner": "acme/example",
+      "pullRequests": {
+        "nodes": [
+          {
+            "id": "PR_1",
+            "number": 1,
+            "author": {"__typename": "User", "login": "alice"},
+            "createdAt": "2026-01-01T00:00:00Z",
+            "closedAt": "2026-01-01T06:00:00Z",
+            "mergedAt": "2026-01-01T06:00:00Z",
+            "state": "CLOSED",
+            "isDraft": false,
+            "additions": 10,
+            "deletions": 4,
+            "changedFiles": 2,
+            "reviewDecision": "APPROVED"
+          },
+          {
+            "id": "PR_2",
+            "number": 2,
+            "author": {"__typename": "Bot", "login": "dependabot[bot]"},
+            "createdAt": "2026-01-02T00:00:00Z",
+            "closedAt": null,
+            "mergedAt": null,
+            "state": "OPEN",
+            "isDraft": false,
+            "additions": 1,
+            "deletions": 1,
+            "changedFiles": 1,
+            "reviewDecision": null
+          }
+        ],
+        "pageInfo": {"hasNextPage": false, "endCursor": "cursor-1"}
+      }
+    }
+  }
+}

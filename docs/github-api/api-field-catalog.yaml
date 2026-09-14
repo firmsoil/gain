@@ -1,0 +1,121 @@
+version: 1
+fields:
+  - logical_field: github_pr.node_id
+    source: GraphQL
+    path: PullRequest.id
+    type: ID!
+    nullable: false
+    canonical_field: pr.github_node_id
+    pii: no
+  - logical_field: github_pr.number
+    source: GraphQL
+    path: PullRequest.number
+    type: Int!
+    nullable: false
+    canonical_field: pr.number
+    pii: no
+  - logical_field: github_pr.repository
+    source: GraphQL
+    path: PullRequest.repository
+    type: Repository!
+    nullable: false
+    canonical_field: repository.*
+    pii: no
+  - logical_field: github_pr.repository.nameWithOwner
+    source: GraphQL
+    path: PullRequest.repository.nameWithOwner
+    type: String!
+    nullable: false
+    canonical_field: repository.name_with_owner
+    pii: no
+  - logical_field: github_pr.author
+    source: GraphQL
+    path: PullRequest.author
+    type: Actor
+    nullable: true
+    canonical_field: actor.*
+    pii: yes-indirect
+  - logical_field: github_pr.created_at
+    source: GraphQL
+    path: PullRequest.createdAt
+    type: DateTime!
+    nullable: false
+    canonical_field: pr.created_at
+    pii: no
+  - logical_field: github_pr.closed_at
+    source: GraphQL
+    path: PullRequest.closedAt
+    type: DateTime
+    nullable: true
+    canonical_field: pr.closed_at
+    pii: no
+  - logical_field: github_pr.merged_at
+    source: GraphQL
+    path: PullRequest.mergedAt
+    type: DateTime
+    nullable: true
+    canonical_field: pr.merged_at
+    pii: no
+  - logical_field: github_pr.state
+    source: GraphQL
+    path: PullRequest.state
+    type: PullRequestState!
+    nullable: false
+    canonical_field: pr.state
+    pii: no
+  - logical_field: github_pr.is_draft
+    source: GraphQL
+    path: PullRequest.isDraft
+    type: Boolean!
+    nullable: false
+    canonical_field: pr.is_draft
+    pii: no
+  - logical_field: github_pr.additions
+    source: GraphQL
+    path: PullRequest.additions
+    type: Int!
+    nullable: false
+    canonical_field: pr.additions
+    pii: no
+  - logical_field: github_pr.deletions
+    source: GraphQL
+    path: PullRequest.deletions
+    type: Int!
+    nullable: false
+    canonical_field: pr.deletions
+    pii: no
+  - logical_field: github_pr.changed_files
+    source: GraphQL
+    path: PullRequest.changedFiles
+    type: Int!
+    nullable: false
+    canonical_field: pr.changed_files
+    pii: no
+  - logical_field: github_pr.review_decision
+    source: GraphQL
+    path: PullRequest.reviewDecision
+    type: PullRequestReviewDecision
+    nullable: true
+    canonical_field: pr.review_decision
+    pii: no
+  - logical_field: github_pr.reviews
+    source: GraphQL
+    path: PullRequest.reviews
+    type: PullRequestReviewConnection
+    nullable: true
+    canonical_field: review.*
+    pii: yes-indirect
+  - logical_field: github_pr.review_threads
+    source: GraphQL
+    path: PullRequest.reviewThreads
+    type: PullRequestReviewThreadConnection!
+    nullable: false
+    canonical_field: review_thread.*
+    pii: yes-indirect
+  - logical_field: github_pr.commits
+    source: GraphQL
+    path: PullRequest.commits
+    type: PullRequestCommitConnection
+    nullable: true
+    canonical_field: commit.*
+    pii: no

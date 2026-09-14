@@ -1,0 +1,51 @@
+[project]
+name = "gain-github-ai-intelligence-network"
+version = "0.1.0"
+description = "Production-grade GitHub Pull Request engineering-flow analytics."
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "httpx>=0.28,<1",
+  "pydantic>=2.11,<3",
+  "pydantic-settings>=2.10,<3",
+  "PyYAML>=6.0,<7",
+  "polars>=1.33,<2",
+  "pyarrow>=21,<23",
+  "typer>=0.17,<1",
+  "structlog>=25.4,<26",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4,<9",
+  "pytest-cov>=6.2,<7",
+  "ruff>=0.13,<1",
+  "mypy>=1.17,<2",
+]
+
+[project.scripts]
+gain = "gain.cli:app"
+
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gain"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+mypy_path = "src"

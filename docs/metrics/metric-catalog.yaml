@@ -1,0 +1,143 @@
+version: 1
+metrics:
+  - metric_id: GAIN-PR-001
+    metric_version: 1
+    name: pr_cycle_time
+    category: flow_speed
+    type: distribution
+    availability: direct
+    executive: true
+    formula: merged_at - created_at
+    source_fields: [pr.created_at, pr.merged_at]
+    grain: merged_pr
+    unit: duration
+    statistics: [count, p50, p75, p90, p95, mean]
+    filters: [merged_at_not_null]
+    null_policy: exclude_from_cycle_time_but_report_count
+    outlier_policy: retain_raw; visualize_with_percentiles
+    interpretation: Observable elapsed PR lifecycle time from creation to merge.
+    misinterpretation: Must not be called coding time or developer effort.
+    gaming_risk: medium
+    privacy: aggregate_preferred
+    test_cases: [normal, long_lived, null_merge, boundary]
+
+  - metric_id: GAIN-PR-002
+    metric_version: 1
+    name: pr_merge_rate
+    category: throughput
+    type: ratio
+    availability: direct
+    executive: true
+    formula: merged_prs / closed_prs
+    source_fields: [pr.merged_at, pr.closed_at, pr.state]
+    grain: repository_period
+    unit: percent
+    interpretation: Share of closed PRs that were merged in the selected population.
+    limitation: Cohort definition must be explicit because created-date and close-date populations differ.
+
+  - metric_id: GAIN-PR-003
+    metric_version: 1
+    name: pr_throughput_merged
+    category: throughput
+    type: count_rate
+    availability: direct
+    executive: true
+    formula: count(PRs merged during period)
+    source_fields: [pr.merged_at]
+    grain: repository_period
+    unit: prs_per_period
+    interpretation: Number of PRs merged during the reporting interval.
+    gaming_risk: high_if_used_individually
+
+  - metric_id: GAIN-PR-004
+    metric_version: 1
+    name: pr_wip
+    category: flow_health
+    type: inventory
+    availability: direct
+    executive: true
+    formula: count(PRs open at observation_timestamp)
+    source_fields: [pr.created_at, pr.closed_at]
+    grain: repository_day
+    unit: prs
+    interpretation: Observable PR inventory at a point in time.
+    limitation: Point-in-time WIP depends on accurate state-change history or snapshot collection.
+
+  - metric_id: GAIN-PR-005
+    metric_version: 1
+    name: pr_aging
+    category: flow_health
+    type: distribution
+    availability: direct
+    executive: false
+    formula: observation_timestamp - created_at for open PRs
+    source_fields: [pr.created_at, pr.closed_at]
+    grain: open_pr_observation
+    unit: duration
+    statistics: [median, p75, p90, p95, max]
+
+  - metric_id: GAIN-PR-006
+    metric_version: 1
+    name: close_without_merge_rate
+    category: quality_risk_proxy
+    type: ratio
+    availability: direct
+    executive: true
+    formula: closed_unmerged_prs / closed_prs
+    source_fields: [pr.closed_at, pr.merged_at]
+    grain: repository_period
+    unit: percent
+    limitation: A closed-unmerged PR is not necessarily a failed engineering change.
+
+  - metric_id: GAIN-PR-007
+    metric_version: 1
+    name: pr_size_total_churn
+    category: complexity_proxy
+    type: distribution
+    availability: direct
+    executive: false
+    formula: additions + deletions
+    source_fields: [pr.additions, pr.deletions]
+    grain: pr
+    unit: lines
+    gaming_risk: high_if_used_individually
+
+  - metric_id: GAIN-PR-008
+    metric_version: 1
+    name: time_to_first_review
+    category: collaboration
+    type: duration_distribution
+    availability: additional_github_data_required
+    executive: true
+    formula: first_review.submitted_at - pr.created_at
+    source_fields: [pr.created_at, review.submitted_at]
+    grain: reviewed_pr
+    unit: duration
+
+  - metric_id: GAIN-DORA-001
+    metric_version: 1
+    name: change_lead_time_to_production
+    category: dora
+    type: duration_distribution
+    availability: non_github_data_required
+    executive: true
+    formula: production_deploy_at - commit_at
+    source_fields: [commit.timestamp, deployment.timestamp]
+    grain: deployed_change
+    unit: duration
+    limitation: PR metadata alone is insufficient.
+
+  - metric_id: GAIN-PR-010
+    metric_version: 1
+    name: monthly_pr_flow_summary
+    category: throughput
+    type: table
+    availability: direct
+    executive: true
+    formula: monthly counts of created, merged, and closed PRs over trailing months
+    source_fields: [pr.created_at, pr.merged_at, pr.closed_at]
+    grain: repository_month
+    unit: counts
+    interpretation: Monthly throughput and flow summary of PR lifecycle milestones.
+    gaming_risk: low
+
