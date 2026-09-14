@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Spec-Driven Development in the AI-Native Era: Architectural Review of GAIN</title>
+
+  <!-- Reveal.js styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
+
+  <!-- Custom presentation styling -->
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Executive Slate / Dark Theme overrides */
+    :root {
+      --bg-dark-1: #0f172a;
+      --bg-dark-2: #1e293b;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    body {
+      background: #0b0f19;
+      color: var(--text-main);
+    }
+
+    .reveal {
+      font-size: 26px;
+    }
+
+    .reveal h1 { font-size: 2.1em; color: #f8fafc; margin-bottom: 0.2em; }
+    .reveal h2 { font-size: 1.55em; color: #f8fafc; border-bottom: 2px solid var(--accent-blue); padding-bottom: 8px; margin-bottom: 18px; }
+    .reveal h3 { font-size: 1.15em; color: var(--accent-cyan); margin-bottom: 14px; font-weight: 600; }
+    .reveal h4 { font-size: 0.95em; color: #e2e8f0; margin-bottom: 10px; font-weight: 600; }
+
+    .subtitle-badge {
+      display: inline-block;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.4);
+      color: #93c5fd;
+      font-size: 0.8em;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+
+    .author-meta {
+      margin-top: 36px;
+      color: var(--text-muted);
+      font-size: 0.75em;
+    }
+
+    /* Grid Columns */
+    .columns {
+      display: grid;
+      grid-template-columns: repeat(var(--cols, 2), 1fr);
+      gap: 24px;
+      margin-top: 14px;
+      text-align: left;
+    }
+    .col-3 { grid-template-columns: repeat(3, 1fr); }
+    .col-45-55 { grid-template-columns: 45% 55%; }
+    .col-50-50 { grid-template-columns: 1fr 1fr; }
+
+    /* Callout Boxes */
+    .callout {
+      border-radius: 8px;
+      background: rgba(30, 41, 59, 0.85);
+      border-left: 5px solid #3b82f6;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      padding: 14px 18px;
+      margin: 14px 0;
+      text-align: left;
+    }
+    .callout-title {
+      font-weight: 700;
+      font-size: 0.88em;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .callout-body {
+      font-size: 0.8em;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    .callout-note { border-left-color: #3b82f6; }
+    .callout-note .callout-title { color: #60a5fa; }
+    .callout-tip { border-left-color: #10b981; }
+    .callout-tip .callout-title { color: #34d399; }
+    .callout-important { border-left-color: #f59e0b; }
+    .callout-important .callout-title { color: #fbbf24; }
+    .callout-warning { border-left-color: #f43f5e; }
+    .callout-warning .callout-title { color: #fb7185; }
+
+    /* Table styling */
+    .table-container {
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    .reveal table {
+      width: 100%;
+      font-size: 0.62em;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+      margin: auto;
+    }
+    .reveal table th {
+      background: #1e3a8a;
+      color: #ffffff;
+      padding: 9px 12px;
+      font-weight: 600;
+      text-align: left;
+      border-bottom: 1px solid #3b82f6;
+    }
+    .reveal table td {
+      padding: 8px 12px;
+      background: rgba(30, 41, 59, 0.85);
+      border-bottom: 1px solid #334155;
+      color: #e2e8f0;
+      line-height: 1.35;
+    }
+    .reveal table tr:last-child td { border-bottom: none; }
+
+    /* Code blocks */
+    .reveal pre {
+      margin: 10px 0;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #090d16;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+    }
+    .reveal code {
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 0.72em;
+      line-height: 1.4;
+    }
+
+    ul, ol {
+      margin-left: 20px;
+      font-size: 0.82em;
+      line-height: 1.45;
+      color: #cbd5e1;
+    }
+    li { margin-bottom: 6px; }
+
+    /* Card Panels */
+    .panel-card {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Mermaid diagrams */
+    .mermaid {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      margin: 10px auto;
+      max-height: 280px;
+    }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Title Slide -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <div style="text-align: center; margin-top: 40px;">
+          <span class="subtitle-badge">TECHNICAL EXECUTIVE ARCHITECTURE REVIEW</span>
+          <h1 style="font-size: 2.3em; font-weight: 800; background: linear-gradient(120deg, #60a5fa, #38bdf8, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Spec-Driven Development in the AI-Native Era</h1>
+          <h3 style="color: #94a3b8; font-weight: 400; margin-top: 12px;">Architectural Review of GAIN (GitHub AI Intelligence Network)</h3>
+          
+          <div class="author-meta">
+            <p><strong>GAIN Engineering Architecture Team</strong></p>
+            <p style="color: #64748b; margin-top: 6px;">September 2026 &bull; Production Codebase v0.1.0</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Executive Overview -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Executive Overview: The Paradigm Shift</h2>
+        <h3>Moving from "Vibe Coding" to Spec-Driven Engineering</h3>
+
+        <div class="columns col-50-50">
+          <div class="panel-card" style="border-left: 4px solid #f43f5e;">
+            <h4 style="color: #fb7185;">⚠️ Ad-Hoc AI Coding ("Vibe Coding")</h4>
+            <ul>
+              <li><strong>Prompt & Hope</strong>: Jumping straight to code generation from unconstrained conversational prompts.</li>
+              <li><strong>Architectural Drift</strong>: Invariants, domain models, and schemas mutate across AI iterations.</li>
+              <li><strong>Hallucinated Invariants</strong>: Assumptions are silently invented by LLMs without validation.</li>
+              <li><strong>Fragile Tech Debt</strong>: Code velocity accelerates, but system predictability and defensibility collapse.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card" style="border-left: 4px solid #10b981;">
+            <h4 style="color: #34d399;">🛡️ Spec-Driven Development (SDD)</h4>
+            <ul>
+              <li><strong>Spec is the Codebase</strong>: The formal specification is the canonical, versioned source of truth.</li>
+              <li><strong>Code as Disposable Artifact</strong>: Code is merely a downstream byproduct synthesized to satisfy contracts.</li>
+              <li><strong>Deterministic Guardrails</strong>: Machine-verifiable schemas, quality rules, and metric definitions.</li>
+              <li><strong>Human Authority</strong>: Strict sign-off gates before code generation or issue promotion.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-note">
+          <div class="callout-title">📌 Core Principle (Microsoft Developer Blog Reference)</div>
+          <div class="callout-body">
+            <em>"As AI coding agents commoditize raw syntax generation, the primary architectural bottleneck shifts from writing code to defining explicit, verifiable specifications that govern behavior."</em>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: The Core Invariant -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>The Core Invariant: The Inverted Lifecycle</h2>
+        <h3>Intent Precedes Implementation</h3>
+
+        <div class="mermaid">
+flowchart LR
+    A["1. Constitution<br/>(Foundational Principles)"] --> B["2. Specification<br/>(spec.md: What & Why)"]
+    B --> C["3. Clarification<br/>(clarifications.md: Policy Defaults)"]
+    C --> D["4. Technical Plan<br/>(plan.md: Architecture & Storage)"]
+    D --> E["5. Quality Checklist<br/>(requirements.md: Pre-Code Gate)"]
+    E --> F["6. Tasks Breakdown<br/>(tasks.md: Atomic Phases)"]
+    F --> G["7. Implementation<br/>(src/gain/: Code & Tests)"]
+        </div>
+
+        <div class="columns col-3">
+          <div class="callout callout-tip">
+            <div class="callout-title">1. Zero Implementation Leakage</div>
+            <div class="callout-body">Functional requirements define observable behaviors and personas—never implementation tech stacks.</div>
+          </div>
+          <div class="callout callout-note">
+            <div class="callout-title">2. Explicit Clarification</div>
+            <div class="callout-body">Uncertain policies (e.g. bot exclusion, backfill windows) are resolved in <code>clarifications.md</code> before coding.</div>
+          </div>
+          <div class="callout callout-important">
+            <div class="callout-title">3. Verification Precedes Code</div>
+            <div class="callout-body">Every stage must pass automated consistency gates (<code>/speckit.analyze</code>) before implementation proceeds.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: The 9-Stage Spec Kit Lifecycle -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>The 9-Stage Spec Kit Lifecycle in GAIN</h2>
+        <h3>Engineering Governance via Versioned Markdown Artifacts</h3>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Spec Kit Command</th>
+                <th>Primary Artifact</th>
+                <th>GAIN Operational Implementation</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>1. Constitution</strong></td>
+                <td><code>/speckit.constitution</code></td>
+                <td>Charter Principles</td>
+                <td>Defines analytical integrity, responsible use, secret masking, least privilege.</td>
+              </tr>
+              <tr>
+                <td><strong>2. Specify</strong></td>
+                <td><code>/speckit.specify</code></td>
+                <td><code>specs/001/spec.md</code></td>
+                <td>Captures 10 Functional Requirements (<code>FR-001</code>–<code>FR-010</code>), personas, and non-goals.</td>
+              </tr>
+              <tr>
+                <td><strong>3. Clarify</strong></td>
+                <td><code>/speckit.clarify</code></td>
+                <td><code>clarifications.md</code></td>
+                <td>Resolves bot filtering, 365d backfill, 30d lookback, cohort boundaries.</td>
+              </tr>
+              <tr>
+                <td><strong>4. Plan</strong></td>
+                <td><code>/speckit.plan</code></td>
+                <td><code>specs/001/plan.md</code></td>
+                <td>GraphQL-first client, DuckDB/Parquet storage, exponential backoff retries.</td>
+              </tr>
+              <tr>
+                <td><strong>5. Checklist</strong></td>
+                <td><code>/speckit.checklist</code></td>
+                <td><code>checklists/requirements.md</code></td>
+                <td>12-point quality gate verifying testability, pagination, and data invariants.</td>
+              </tr>
+              <tr>
+                <td><strong>6. Tasks</strong></td>
+                <td><code>/speckit.tasks</code></td>
+                <td><code>specs/001/tasks.md</code></td>
+                <td>Decomposes roadmap into sequenced tasks across Phases 0 through 6.</td>
+              </tr>
+              <tr>
+                <td><strong>7. Analyze</strong></td>
+                <td><code>/speckit.analyze</code></td>
+                <td>Consistency Gate</td>
+                <td>Read-only check verifying cross-artifact integrity before code execution.</td>
+              </tr>
+              <tr>
+                <td><strong>8. Implement</strong></td>
+                <td><code>/speckit.implement</code></td>
+                <td><code>src/gain/</code></td>
+                <td>Implementation strictly driven by task acceptance criteria and unit tests.</td>
+              </tr>
+              <tr>
+                <td><strong>9. Converge</strong></td>
+                <td><code>/speckit.converge</code></td>
+                <td>Convergence Loop</td>
+                <td>Validates output data against Metric Catalog, appending remediation tasks if needed.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SLIDE 5: Thin Vertical Slice Strategy -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Thin Vertical Slice Strategy</h2>
+        <h3>De-risking Delivery by Proving the Critical Path First</h3>
+
+        <div class="columns col-45-55">
+          <div class="panel-card" style="border-left: 4px solid #f59e0b;">
+            <h4 style="color: #fbbf24;">The Anti-Pattern: Horizontal Sprawl</h4>
+            <ul>
+              <li>Building extensive data models without ingestion.</li>
+              <li>Writing complex UI or reports before validating pipelines.</li>
+              <li>Accumulating unverified assumptions across multiple subsystems simultaneously.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card" style="border-left: 4px solid #3b82f6;">
+            <h4 style="color: #60a5fa;">GAIN's Thin Vertical Slice (Phase 1)</h4>
+            <pre><code class="language-text">GitHub GraphQL API
+      ↓ (Cursor pagination, max 100)
+gain.github.client (Transport & rate limits)
+      ↓ (Raw JSONL persistence + provenance)
+data/raw/ (Immutable audit archive)
+      ↓ (gain.schema canonical normalization)
+gain.model.pr.PullRequest (Pydantic validation)
+      ↓ (gain.metrics.cycle_time calculation)
+GAIN-PR-001 Cycle Time (Percentile distributions)
+      ↓ (gain.storage.analytics Parquet export)
+Verified Outputs & Offline Demo</code></pre>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">💡 Core Benefit</div>
+          <div class="callout-body">
+            Phase 1 validated end-to-end telemetry flow, storage, and mathematics <strong>before</strong> undertaking Phase 2 (resilience) or Phase 3 (advanced metrics).
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 6: Human Authority & AI Governance -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Human Authority & AI Governance</h2>
+        <h3>Package <code>002-requirements-jira-sdd</code>: Demoting AI to Non-Authoritative Drafts</h3>
+
+        <div class="mermaid">
+flowchart LR
+    BC["Business Context<br/>(Human Input)"] --> LLM["AI Story Generator<br/>(Schema Constrained)"]
+    LLM --> Draft["Generated Draft<br/>(Non-Authoritative)"]
+    Draft --> Gate{"Human Review<br/>& Approval Gate"}
+    Gate -- Rejected --> Revision["Human Revision<br/>& Re-Prompting"]
+    Revision --> Draft
+    Gate -- Approved --> Approved["Canonical Requirement<br/>(Status: APPROVED)"]
+    Approved --> SDD["SDD Spec Promotion<br/>(Specification Seed)"]
+    Approved --> Jira["External Projection<br/>(Jira Issue via Adapter)"]
+        </div>
+
+        <div class="columns col-50-50">
+          <div class="panel-card">
+            <h4>Governance Invariants</h4>
+            <ul>
+              <li>AI output is <strong>strictly non-authoritative</strong>.</li>
+              <li>Promotion to specification seed <strong>requires explicit named human approval</strong>: <code>approved_by</code>, <code>approved_at</code>, <code>reviewed_by</code>.</li>
+            </ul>
+          </div>
+
+          <div>
+            <pre><code class="language-python"># Programmatic Invariant in src/gain/requirements/sdd.py
+def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
+    if story.lifecycle_status != StoryLifecycleStatus.APPROVED:
+        raise RequirementValidationError(
+            "Only an approved story can be promoted to an SDD spec seed"
+        )
+    return SDDSpecificationSeed(...)</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 7: Decoupling External Trackers -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Decoupling External Trackers: Jira as an Adapter</h2>
+        <h3>The Trap: Letting Issue Trackers Dictate Architecture</h3>
+
+        <div class="columns col-50-50">
+          <div class="panel-card" style="border-left: 4px solid #f43f5e;">
+            <h4 style="color: #fb7185;">❌ The Jira-Centric Pitfall</h4>
+            <ul>
+              <li>Domain models leak Jira schema (<code>jira_issue_key</code>, <code>customfield_10014</code>, ADF nodes).</li>
+              <li>Development workflows halt when Jira API is offline or unauthenticated.</li>
+              <li>Pure Git/SDD engineering teams are locked into external enterprise software.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card" style="border-left: 4px solid #10b981;">
+            <h4 style="color: #34d399;">✅ GAIN's Hexagonal Architecture</h4>
+            <ul>
+              <li><strong>Internal Domain Entity</strong>: <code>CanonicalRequirement</code> is the authoritative model.</li>
+              <li><strong>Decoupled Reference</strong>: External systems mapped via <code>ExternalReference</code>.</li>
+              <li><strong>Jira is Purely an Adapter</strong>: <code>gain.requirements.jira</code> isolates ADF formatting, transport, and errors.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">🎯 Strategic Outcome</div>
+          <div class="callout-body">
+            GAIN operates with <strong>zero Jira dependency</strong> in pure Git/SDD mode, while supporting deterministic bidirectional Jira synchronization when desired.
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 8: Executable Contracts & Data Quality Engine -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Executable Contracts & Data Quality Engine</h2>
+        <h3>Machine-Verifiable Semantic Guardrails</h3>
+
+        <div class="columns col-50-50">
+          <div class="panel-card">
+            <h4>1. Input & Metric Authority</h4>
+            <ul>
+              <li><strong>Input API Contract</strong>: Defines GraphQL query shape, pagination cursors, and rate-limit points.</li>
+              <li><strong>Metric Catalog Authority</strong>: Every calculation must match a versioned, authorized formula:</li>
+            </ul>
+            <pre><code class="language-python">catalog = MetricCatalog("docs/metrics/metric-catalog.yaml")
+definition = catalog.get("GAIN-PR-001")
+if definition["metric_version"] != CycleTimeMetric.metric_version:
+    raise BadParameter("Code and Catalog versions mismatch")</code></pre>
+          </div>
+
+          <div class="panel-card">
+            <h4>2. Programmatic Quality Engine (<code>gain.quality</code>)</h4>
+            <ul>
+              <li><strong>Semantic Invariants</strong>:
+                <ul>
+                  <li><code>merged_at &lt; created_at</code>: ❌ Strictly invalid (negative duration).</li>
+                  <li><code>closed_at &lt; created_at</code>: ❌ Strictly invalid.</li>
+                  <li>Duplicate Node IDs: ❌ Detected and flagged.</li>
+                  <li>Merged without <code>closed_at</code>: ⚠️ Warning flag.</li>
+                </ul>
+              </li>
+              <li><strong>Zero Silent Dropping</strong>: Invalid records surfaced in structured <code>normalization_report.json</code>.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 9: 4-Tier Pipeline & Deterministic Replayability -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>4-Tier Pipeline & Deterministic Replayability</h2>
+        <h3>Audit Provenance & Offline Verifiability</h3>
+
+        <div class="mermaid">
+flowchart LR
+    L1["1. Raw API Archive<br/>(data/raw/*.jsonl)<br/>Exact payload + Run ID"] 
+    --> L2["2. In-Memory Normalization<br/>(gain.schema)<br/>Type casting & parsing"]
+    --> L3["3. Canonical Parquet<br/>(data/canonical/*.parquet)<br/>Validated Domain Model"]
+    --> L4["4. Metric Observations<br/>(data/metrics/*.parquet)<br/>Aggregations & Percentiles"]
+        </div>
+
+        <div class="columns col-50-50">
+          <div class="panel-card">
+            <h4>Cryptographic Provenance</h4>
+            <ul>
+              <li>Ingestion audit stamps on every raw and canonical record: <code>ingestion_run_id</code>, <code>source_collected_at</code>.</li>
+              <li>Requirements track SHA-256 <code>input_hash</code> and <code>output_hash</code> across all AI revisions.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card">
+            <h4>Replayability Guarantee</h4>
+            <ul>
+              <li>If a metric formula or business definition changes:
+                <ul>
+                  <li><strong>No need to re-query the GitHub API.</strong></li>
+                  <li>Re-run canonical transformations directly from archived raw JSONL using <code>gain.storage.replay</code>.</li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 10: Live Case Study -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Live Case Study: Validation on Spinnaker Telemetry</h2>
+        <h3>Testing Real-World Telemetry: <code>firmsoil/spinnaker</code> & <code>spinnaker/spinnaker</code></h3>
+
+        <div class="columns col-50-50">
+          <div class="panel-card" style="border-left: 4px solid #f59e0b;">
+            <h4 style="color: #fbbf24;">Real Bugs Caught by Live Execution</h4>
+            <ol>
+              <li><strong>GraphQL Query Signature</strong>: GitHub schema rejects queries declaring unused variables (<code>$since</code>, <code>$until</code>). Fixed in <code>gain.github.queries</code>.</li>
+              <li><strong>PR Lifecycle Enum</strong>: GitHub GraphQL returns state <code>MERGED</code>, which was previously rejected by a strict <code>OPEN/CLOSED</code> validator. Fixed in <code>gain.model.pr</code>.</li>
+              <li><strong>Configuration Ergonomics</strong>: Added <code>AliasChoices</code> for seamless <code>GITHUB_TOKEN</code> resolution.</li>
+            </ol>
+          </div>
+
+          <div class="panel-card" style="border-left: 4px solid #10b981;">
+            <h4 style="color: #34d399;">Live Analytics Yield (<code>GAIN-PR-001</code> & <code>010</code>)</h4>
+            <ul>
+              <li><strong>67 PRs Ingested</strong> across 14 GraphQL pages.</li>
+              <li><strong>60 Merged PRs Analyzed</strong>:
+                <ul>
+                  <li><strong>p50 (Median Cycle Time)</strong>: 19.4 hours</li>
+                  <li><strong>Mean Cycle Time</strong>: 2.5 days</li>
+                  <li><strong>p90 Cycle Time</strong>: 6.3 days</li>
+                </ul>
+              </li>
+              <li><strong>Monthly PR Flow Balance Sheet</strong>:
+                <ul>
+                  <li>Aug 2026: 67 Created, 55 Merged, 59 Closed (93.2% Merge Rate)</li>
+                  <li>Sep 2026: 5 Merged, 5 Closed (100% Merge Rate)</li>
+                  <li><strong>Total Merge Rate: 93.8%</strong></li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 11: Strategic ROI -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Strategic ROI & Enterprise Architecture Impact</h2>
+        <h3>Why Spec-Driven Development is Essential for AI-Native Organizations</h3>
+
+        <div class="columns col-3">
+          <div class="panel-card">
+            <h4 style="color: #60a5fa;">🎯 Predictable Delivery</h4>
+            <ul>
+              <li>Guaranteed alignment between PM intent, architectural specs, and AI code generation.</li>
+              <li>Zero "prompt drift" or architectural corruption across developer iterations.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card">
+            <h4 style="color: #34d399;">⚖️ Defensible Analytics</h4>
+            <ul>
+              <li>Engineering leaders make high-stakes resource decisions based on GAIN.</li>
+              <li>Every number traces back to a versioned mathematical formula in <code>metric-catalog.yaml</code>.</li>
+            </ul>
+          </div>
+
+          <div class="panel-card">
+            <h4 style="color: #a78bfa;">🔄 Code Reusability</h4>
+            <ul>
+              <li>Because code is treated as downstream byproduct, entire subsystems can be safely refactored or regenerated by AI agents against invariant specs.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout callout-note">
+          <div class="callout-title">🛡️ Responsible Use Invariant (<code>responsible-use.md</code>)</div>
+          <div class="callout-body">
+            <em>GAIN measures <strong>system flow latency and batching efficiency</strong>—never developer coding time or individual performance. Ethical boundaries are codified as architectural invariants.</em>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 12: Conclusion & Repository Architecture Map -->
+      <section data-background-gradient="linear-gradient(135deg, #0f172a 0%, #1e293b 100%)">
+        <h2>Conclusion & Repository Architecture Map</h2>
+        <h3>The Specification Portfolio as Single Source of Truth</h3>
+
+        <pre><code class="language-text">specs/
+├── README.md                          # Master Product & Developer Onboarding Guide
+├── 001-gain-pr-analytics/             # Core Telemetry Pipeline & Metrics Package
+│   ├── spec.md                        # Functional requirements, personas & non-goals
+│   ├── plan.md                        # Technical architecture & storage strategy
+│   ├── tasks.md                       # Phased atomic task sequencing (Phases 0–6)
+│   ├── data-model.md                  # Canonical entity definitions & invariants
+│   ├── responsible-use.md             # Ethical policies & interpretation guardrails
+│   └── contracts/                     # Machine-readable input & output schemas
+└── 002-requirements-jira-sdd/         # Requirements Engineering & Adapter Layer
+    ├── spec.md                        # Governed requirements lifecycle requirements
+    ├── plan.md                        # Adapter isolation & dependency inversion
+    └── data-model.md                  # CanonicalRequirement & ExternalReference models</code></pre>
+
+        <div class="callout callout-tip">
+          <div class="callout-title">🚀 Key Executive Takeaway</div>
+          <div class="callout-body">
+            Spec-Driven Development gives engineering leaders the <strong>velocity of AI generation</strong> paired with the <strong>control, predictability, and defensibility of formal systems engineering</strong>.
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Scripts: Reveal.js, Highlight.js, Mermaid.js -->
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#0f172a',
+        primaryColor: '#1e3a8a',
+        primaryTextColor: '#f8fafc',
+        primaryBorderColor: '#3b82f6',
+        lineColor: '#60a5fa',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#0f172a'
+      }
+    });
+
+    Reveal.initialize({
+      width: 1600,
+      height: 900,
+      margin: 0.06,
+      controls: true,
+      progress: true,
+      slideNumber: true,
+      transition: 'slide',
+      transitionSpeed: 'fast',
+      plugins: [ RevealHighlight ]
+    }).then(() => {
+      mermaid.run({
+        querySelector: '.mermaid'
+      });
+    });
+  </script>
+</body>
+</html>
