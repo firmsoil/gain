@@ -501,6 +501,192 @@
       stroke-linejoin: round;
     }
 
+    /* Native Governance Flow (Zero-Truncation Guaranteed) */
+    .gov-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 1.5px solid var(--f100-slate-200);
+      border-radius: 12px;
+      padding: 12px 18px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      margin: 6px auto 12px auto;
+      box-sizing: border-box;
+      gap: 8px;
+    }
+
+    .gov-node {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 6px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .gov-badge {
+      font-size: 0.46em;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .input-node .gov-badge { background: #e2e8f0; color: #334155; }
+    .ai-node .gov-badge { background: #ede9fe; color: #6d28d9; }
+    .draft-node .gov-badge { background: #fef3c7; color: #b45309; }
+    .gate-node .gov-badge { background: #dbeafe; color: #1d4ed8; }
+    .approved-node .gov-badge { background: #d1fae5; color: #047857; }
+
+    .draft-node { border-color: #fcd34d; background: #fffdf5; }
+    .gate-node { border-color: #93c5fd; background: #f0f7ff; }
+    .approved-node { border-color: #6ee7b7; background: #f0fdf4; }
+
+    .gov-title {
+      font-size: 0.64em;
+      font-weight: 700;
+      color: var(--f100-navy);
+      line-height: 1.2;
+      margin-bottom: 3px;
+      white-space: nowrap;
+    }
+
+    .gov-sub {
+      font-size: 0.52em;
+      font-weight: 600;
+      color: var(--f100-slate-600);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      white-space: nowrap;
+    }
+
+    .gov-dual-target {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1.2;
+    }
+
+    .gov-target-node {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 4px rgba(15, 23, 42, 0.04);
+    }
+
+    .target-badge {
+      font-size: 0.48em;
+      font-weight: 800;
+      padding: 2px 5px;
+      border-radius: 3px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+
+    .target-badge.jira-badge {
+      background: #ede9fe;
+      color: #6d28d9;
+      border-color: #ddd6fe;
+    }
+
+    .target-title {
+      font-size: 0.56em;
+      font-weight: 600;
+      color: var(--f100-navy);
+      white-space: nowrap;
+    }
+
+    /* Native 4-Tier Data Pipeline (Zero-Truncation Guaranteed) */
+    .tier-flow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+      border: 1.5px solid var(--f100-slate-200);
+      border-radius: 12px;
+      padding: 14px 18px;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05);
+      margin: 6px auto 12px auto;
+      box-sizing: border-box;
+      gap: 12px;
+    }
+
+    .tier-step {
+      flex: 1;
+      background: #ffffff;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 0;
+    }
+
+    .tier-step .tier-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1e3a8a;
+      color: #ffffff;
+      font-size: 0.5em;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .tier-step .tier-title {
+      font-size: 0.66em;
+      font-weight: 700;
+      color: var(--f100-navy);
+      line-height: 1.25;
+      margin-bottom: 3px;
+      white-space: nowrap;
+    }
+
+    .tier-step .tier-code {
+      font-size: 0.54em;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--f100-cobalt);
+      background: #eff6ff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #bfdbfe;
+      margin-bottom: 3px;
+      white-space: nowrap;
+    }
+
+    .tier-step .tier-sub {
+      font-size: 0.5em;
+      color: var(--f100-slate-600);
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+
     /* Stat Pill Box */
     .stat-pill-grid {
       display: grid;
@@ -834,16 +1020,47 @@ data/metrics/*.parquet → Verified analytics & offline demo</code></pre>
         <h2>Human Authority & AI Governance</h2>
         <h3>Package <code>002-requirements-jira-sdd</code>: Demoting AI to Non-Authoritative Drafts</h3>
 
-        <div class="mermaid">
-flowchart LR
-    BC["Business Context"] --> LLM["AI Story Generator"]
-    LLM --> Draft["Generated Draft<br/>(Non-Authoritative)"]
-    Draft --> Gate["<b>Human Review Gate</b><br/>Sign-Off Required"]
-    Gate -- Approved --> Approved["<b>Canonical Spec</b><br/>Status: APPROVED"]
-    Gate -- Rejected --> Revision["Human Revision<br/>& Refinement"]
-    Revision --> Draft
-    Approved --> SDD["SDD Spec Seed"]
-    Approved --> Jira["Jira Adapter"]
+        <div class="gov-flow">
+          <div class="gov-node input-node">
+            <div class="gov-badge">INPUT</div>
+            <div class="gov-title">Business Context</div>
+            <div class="gov-sub">Human Intent</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="gov-node ai-node">
+            <div class="gov-badge">AI AGENT</div>
+            <div class="gov-title">Story Generator</div>
+            <div class="gov-sub">Strict Schemas</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="gov-node draft-node">
+            <div class="gov-badge">UNTRUSTED</div>
+            <div class="gov-title">Generated Draft</div>
+            <div class="gov-sub">Non-Authoritative</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="gov-node gate-node">
+            <div class="gov-badge">HUMAN GATE</div>
+            <div class="gov-title">Review & Sign-Off</div>
+            <div class="gov-sub">Explicit Approval</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="gov-node approved-node">
+            <div class="gov-badge">CANONICAL</div>
+            <div class="gov-title">Approved Spec</div>
+            <div class="gov-sub">Status: APPROVED</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="gov-dual-target">
+            <div class="gov-target-node">
+              <span class="target-badge">SDD</span>
+              <span class="target-title">Spec Seed (spec.md)</span>
+            </div>
+            <div class="gov-target-node">
+              <span class="target-badge jira-badge">JIRA</span>
+              <span class="target-title">External Projection</span>
+            </div>
+          </div>
         </div>
 
         <div class="columns col-50-50">
@@ -963,12 +1180,34 @@ if definition["metric_version"] != CycleTimeMetric.metric_version:
         <h2>4-Tier Pipeline & Deterministic Replayability</h2>
         <h3>Audit Provenance & Offline Verifiability</h3>
 
-        <div class="mermaid">
-flowchart LR
-    L1["<b>1. Raw API Archive</b><br/><code>data/raw/*.jsonl</code><br/>Payload + Run ID"] 
-    --> L2["<b>2. Normalization</b><br/><code>gain.schema</code><br/>Type Cast & Parsing"]
-    --> L3["<b>3. Canonical Parquet</b><br/><code>data/canonical/</code><br/>Domain Model Invariants"]
-    --> L4["<b>4. Metric Outputs</b><br/><code>data/metrics/</code><br/>Percentiles & Rollups"]
+        <div class="tier-flow">
+          <div class="tier-step">
+            <div class="tier-num">1</div>
+            <div class="tier-title">Raw API Archive</div>
+            <div class="tier-code">data/raw/*.jsonl</div>
+            <div class="tier-sub">Exact Payload + Run ID</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="tier-step">
+            <div class="tier-num">2</div>
+            <div class="tier-title">Normalization</div>
+            <div class="tier-code">gain.schema</div>
+            <div class="tier-sub">Type Casting & Parsing</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="tier-step">
+            <div class="tier-num">3</div>
+            <div class="tier-title">Canonical Parquet</div>
+            <div class="tier-code">data/canonical/</div>
+            <div class="tier-sub">Domain Model Invariants</div>
+          </div>
+          <svg class="pipeline-chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+          <div class="tier-step">
+            <div class="tier-num">4</div>
+            <div class="tier-title">Metric Observations</div>
+            <div class="tier-code">data/metrics/</div>
+            <div class="tier-sub">Aggregations & Percentiles</div>
+          </div>
         </div>
 
         <div class="columns col-50-50">
