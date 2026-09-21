@@ -92,7 +92,6 @@ def _generated_service_story(
     return service, context, story
 
 
-
 def test_generation_records_provenance_and_keeps_draft_non_authoritative(tmp_path: Path) -> None:
     service, context, story = _generated_service_story(tmp_path)
 
@@ -280,9 +279,9 @@ def test_jira_project_can_be_derived_only_from_explicit_configuration(tmp_path: 
     )
     approved = service.approve_story(draft_without_project.story_id, "ba@example.test")
 
-    payload = JiraStoryMapper(
-        JiraFieldConfiguration(default_project_key="PLATFORM")
-    ).to_payload(approved)
+    payload = JiraStoryMapper(JiraFieldConfiguration(default_project_key="PLATFORM")).to_payload(
+        approved
+    )
     assert payload["fields"]["project"] == {"key": "PLATFORM"}
 
 
@@ -599,4 +598,3 @@ def test_external_reference_preserves_multisystem_identities() -> None:
     assert req.get_external_reference("jira") is not None
     assert req.get_external_reference("github") is not None
     assert req.get_external_reference("github").external_key == "#42"  # type: ignore[union-attr]
-

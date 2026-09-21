@@ -410,4 +410,3 @@ class RequirementsService:
     reject_requirement = reject_story
     promote_requirement = promote_story
     link_formal_requirement = link_formal_specification
-

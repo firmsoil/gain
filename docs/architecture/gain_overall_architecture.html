@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GAIN Platform Overall Architecture Specification</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap');
+
+    body {
+      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: #F8F9FA;
+      color: #202124;
+      margin: 0;
+      padding: 0;
+    }
+
+    .font-google-sans {
+      font-family: 'Google Sans', 'Roboto', sans-serif;
+    }
+
+    .font-mono {
+      font-family: 'Roboto Mono', monospace;
+    }
+
+    /* Enterprise card styles */
+    .gcp-card {
+      background: #FFFFFF;
+      border: 1px solid #DADCE0;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .gcp-card:hover {
+      box-shadow: 0 2px 6px 2px rgba(60,64,67,0.15), 0 1px 2px 0 rgba(60,64,67,0.3);
+      border-color: #BDC1C6;
+      transform: translateY(-1px);
+    }
+
+    /* Enterprise tier boundary styling */
+    .gcp-boundary {
+      background-color: #FFFFFF;
+      border: 1.5px solid #DADCE0;
+      border-radius: 12px;
+      position: relative;
+    }
+
+    .gcp-boundary-muted {
+      background-color: #F8F9FA;
+      border: 1.5px dashed #BDC1C6;
+      border-radius: 12px;
+      position: relative;
+    }
+
+    /* Distinct Google Cloud Product Color Accents */
+    .gcp-blue { color: #1A73E8; }
+    .bg-gcp-blue { background-color: #1A73E8; }
+    .bg-gcp-blue-subtle { background-color: #E8F0FE; }
+    .border-gcp-blue { border-color: #1A73E8; }
+
+    .gcp-green { color: #1E8E3E; }
+    .bg-gcp-green { background-color: #1E8E3E; }
+    .bg-gcp-green-subtle { background-color: #E6F4EA; }
+    .border-gcp-green { border-color: #1E8E3E; }
+
+    .gcp-yellow { color: #F9AB00; }
+    .bg-gcp-yellow { background-color: #F9AB00; }
+    .bg-gcp-yellow-subtle { background-color: #FEF7E0; }
+    .border-gcp-yellow { border-color: #F9AB00; }
+
+    .gcp-red { color: #D93025; }
+    .bg-gcp-red { background-color: #D93025; }
+    .bg-gcp-red-subtle { background-color: #FCE8E6; }
+    .border-gcp-red { border-color: #D93025; }
+
+    .gcp-purple { color: #9334E8; }
+    .bg-gcp-purple { background-color: #9334E8; }
+    .bg-gcp-purple-subtle { background-color: #F3E8FD; }
+    .border-gcp-purple { border-color: #9334E8; }
+
+    .gcp-grey { color: #5F6368; }
+    .bg-gcp-grey-subtle { background-color: #F1F3F4; }
+
+    /* Custom connector line animation */
+    .flow-line {
+      stroke: #1A73E8;
+      stroke-width: 2;
+      stroke-dasharray: 6;
+      animation: dash 30s linear infinite;
+    }
+
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -1000;
+      }
+    }
+  </style>
+</head>
+<body class="bg-[#F8F9FA] text-[#202124] antialiased p-6 lg:p-10 min-w-[1280px]">
+
+  <!-- TOP APP BAR / HEADER -->
+  <header class="bg-white border-b border-[#DADCE0] shadow-sm rounded-xl p-6 mb-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <!-- System multi-color accent bar -->
+        <div class="flex items-center space-x-1">
+          <div class="w-2.5 h-7 rounded-sm bg-[#4285F4]"></div>
+          <div class="w-2.5 h-7 rounded-sm bg-[#EA4335]"></div>
+          <div class="w-2.5 h-7 rounded-sm bg-[#FBBC04]"></div>
+          <div class="w-2.5 h-7 rounded-sm bg-[#34A853]"></div>
+        </div>
+        <div>
+          <div class="flex items-center space-x-3">
+            <span class="text-xs font-medium tracking-wider uppercase px-2 py-0.5 rounded bg-[#E8F0FE] text-[#1A73E8] border border-[#D2E3FC]">
+              Platform Architecture
+            </span>
+            <span class="text-xs text-[#5F6368]">Reference Architecture v1.0</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-[#E6F4EA] text-[#137333] font-medium border border-[#CEEAD6]">
+              ● Production Validated (Gates 1–9)
+            </span>
+          </div>
+          <h1 class="text-2xl lg:text-3xl font-bold font-google-sans text-[#202124] mt-1">
+            GAIN — GitHub AI Intelligence Network Platform Architecture
+          </h1>
+          <p class="text-sm text-[#5F6368] mt-0.5">
+            Enterprise multi-source engineering intelligence platform with deterministic zero-LLM analytics, governed Model Context Protocol (MCP) server, and autonomous evidence-synthesizing agents.
+          </p>
+        </div>
+      </div>
+
+      <!-- Quick Invariants Badges -->
+      <div class="hidden xl:flex flex-col items-end space-y-2 text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="font-medium text-[#5F6368]">Core Directives:</span>
+          <span class="px-2.5 py-1 bg-white border border-[#DADCE0] rounded-full text-[#3C4043] font-medium shadow-xs">
+            🛡️ Zero-LLM in Math
+          </span>
+          <span class="px-2.5 py-1 bg-white border border-[#DADCE0] rounded-full text-[#3C4043] font-medium shadow-xs">
+            📦 Lossless Provenance
+          </span>
+          <span class="px-2.5 py-1 bg-white border border-[#DADCE0] rounded-full text-[#3C4043] font-medium shadow-xs">
+            🔌 Transport Independent
+          </span>
+        </div>
+        <div class="flex items-center space-x-2 text-[#5F6368]">
+          <span>Test Suite: <strong class="text-[#137333]">135/135 Passed (100%)</strong></span>
+          <span>•</span>
+          <span>Typing: <strong class="text-[#1A73E8]">mypy strict (0 errors)</strong></span>
+          <span>•</span>
+          <span>Python &gt;= 3.12</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE VIEW SELECTOR / TABS -->
+    <div class="flex items-center space-x-2 mt-6 pt-4 border-t border-[#F1F3F4] text-sm overflow-x-auto" id="filter-tabs">
+      <span class="text-xs font-semibold text-[#5F6368] uppercase mr-2">Highlight Flow:</span>
+      <button onclick="highlightLayer('all')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-[#1A73E8] text-white shadow-xs" data-target="all">
+        Complete End-to-End System
+      </button>
+      <button onclick="highlightLayer('tier-ingest')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]" data-target="tier-ingest">
+        1. Telemetry Ingestion & Storage
+      </button>
+      <button onclick="highlightLayer('tier-analytics')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]" data-target="tier-analytics">
+        2. Deterministic Analytics Engine
+      </button>
+      <button onclick="highlightLayer('tier-mcp')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]" data-target="tier-mcp">
+        3. Governed GAIN MCP Server
+      </button>
+      <button onclick="highlightLayer('tier-agent')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]" data-target="tier-agent">
+        4. Autonomous Agent & Synthesis
+      </button>
+      <button onclick="highlightLayer('tier-antigravity')" class="tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]" data-target="tier-antigravity">
+        5. Antigravity Multi-Agent Hub
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN ARCHITECTURE CANVAS (5 HORIZONTAL TIERS / VERTICAL SYSTEM FLOW) -->
+  <main class="space-y-8">
+
+    <!-- ===================================================================== -->
+    <!-- TIER 1: EXTERNAL SYSTEMS & MULTI-SOURCE INGESTION TIER                 -->
+    <!-- ===================================================================== -->
+    <section id="tier-ingest" class="gcp-boundary p-6 transition-all duration-300">
+      <!-- Tier Header Chip -->
+      <div class="absolute -top-3.5 left-6 bg-white px-3 py-0.5 rounded-full border border-[#DADCE0] shadow-xs flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#EA4335]"></span>
+        <span class="text-xs font-bold font-google-sans uppercase tracking-wider text-[#3C4043]">
+          Tier 1: Multi-Source Telemetry Acquisition & Lossless Raw Capture
+        </span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6 mt-3">
+        <!-- 1.1 External Enterprise Data Sources (Inputs) -->
+        <div class="col-span-12 lg:col-span-4 bg-[#F8F9FA] rounded-xl p-4 border border-[#E8EAED]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#5F6368] tracking-wider">Authoritative Source Systems</span>
+            <span class="text-[11px] px-2 py-0.5 rounded bg-white text-[#5F6368] border border-[#DADCE0]">External APIs</span>
+          </div>
+
+          <div class="space-y-3">
+            <!-- GitHub GraphQL Endpoint -->
+            <div class="gcp-card p-3.5 flex items-start space-x-3" onclick="showDetails('gh_source')">
+              <div class="w-9 h-9 rounded-lg bg-[#24292F] flex items-center justify-center text-white shrink-0 shadow-xs">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-semibold text-[#202124]">GitHub GraphQL & REST</h4>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E8F0FE] text-[#1A73E8]">Gate 1</span>
+                </div>
+                <p class="text-xs text-[#5F6368] mt-0.5 truncate">Pull Requests, Commits, Reviews, Deployments</p>
+                <div class="flex items-center space-x-2 mt-1.5 text-[11px] text-[#80868B]">
+                  <span><code>api.github.com/graphql</code></span>
+                  <span>•</span>
+                  <span>Immutable Source of Truth</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- GitHub Copilot Telemetry -->
+            <div class="gcp-card p-3.5 flex items-start space-x-3" onclick="showDetails('copilot_source')">
+              <div class="w-9 h-9 rounded-lg bg-[#6f42c1] flex items-center justify-center text-white shrink-0 shadow-xs">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.5h-2v-2h2zm0-4h-2V7h2z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-semibold text-[#202124]">GitHub Copilot Telemetry</h4>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#F3E8FD] text-[#9334E8]">Gate 8</span>
+                </div>
+                <p class="text-xs text-[#5F6368] mt-0.5 truncate">Developer adoption, acceptance rates, IDE usage</p>
+                <div class="flex items-center space-x-2 mt-1.5 text-[11px] text-[#80868B]">
+                  <span>Seat-level telemetry</span>
+                  <span>•</span>
+                  <span>Zero-inference telemetry</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Jira & Linear Work Items -->
+            <div class="gcp-card p-3.5 flex items-start space-x-3" onclick="showDetails('jira_source')">
+              <div class="w-9 h-9 rounded-lg bg-[#0052CC] flex items-center justify-center text-white shrink-0 shadow-xs">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M11.53 2c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V2h-10.47zm-5.63 5.76c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35V7.76H5.9zm-5.9 5.88c0 2.4 1.97 4.35 4.35 4.35h1.78v1.7c0 2.4 1.94 4.34 4.34 4.35v-10.4H0z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-semibold text-[#202124]">Jira & Linear Systems</h4>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#FEF7E0] text-[#B06000]">Gate 9</span>
+                </div>
+                <p class="text-xs text-[#5F6368] mt-0.5 truncate">Epics, Stories, Bugs, Estimates, Resolutions</p>
+                <div class="flex items-center space-x-2 mt-1.5 text-[11px] text-[#80868B]">
+                  <span>Enterprise Work Management</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- CI/CD & Production Deployments -->
+            <div class="gcp-card p-3.5 flex items-start space-x-3" onclick="showDetails('deployment_source')">
+              <div class="w-9 h-9 rounded-lg bg-[#E37400] flex items-center justify-center text-white shrink-0 shadow-xs">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between">
+                  <h4 class="text-sm font-semibold text-[#202124]">CI/CD & Deployments</h4>
+                  <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[#E6F4EA] text-[#137333]">Gate 9</span>
+                </div>
+                <p class="text-xs text-[#5F6368] mt-0.5 truncate">GitHub Actions, ArgoCD, Spinnaker Releases</p>
+                <div class="flex items-center space-x-2 mt-1.5 text-[11px] text-[#80868B]">
+                  <span>Environment targets</span>
+                  <span>•</span>
+                  <span>Success / Failure state</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1.2 Resilient Source Adapters & Acquisition Client -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#1A73E8]"></span>
+                <span>Resilient Acquisition Engine</span>
+              </span>
+              <span class="text-[11px] font-mono bg-[#E8F0FE] text-[#1A73E8] px-2 py-0.5 rounded">gain.adapters.*</span>
+            </div>
+
+            <div class="space-y-2.5">
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-semibold text-[#202124] flex items-center justify-between">
+                  <span>GitHubGraphQLClient</span>
+                  <span class="text-[10px] text-[#5F6368]">httpx + backoff</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Exponential backoff, jitter, rate-limit headers (<code>x-ratelimit-remaining</code>), retry-after parsing, checkpoint pagination.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-semibold text-[#202124] flex items-center justify-between">
+                  <span>BaseSourceAdapter[T]</span>
+                  <span class="text-[10px] text-[#5F6368]">Generic ABC (Py 3.12)</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Dual-write orchestration: guarantees atomic raw capture prior to normalization. Error quarantine mechanism for corrupted payloads.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-semibold text-[#202124] flex items-center justify-between">
+                  <span>CheckpointStore</span>
+                  <span class="text-[10px] text-[#5F6368]">Cursor persistence</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Resumable backfills with page/cursor tracking across multi-repository extraction runs.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-2.5 bg-[#FEF7E0] border border-[#FEEFC3] rounded-lg text-[11px] text-[#7A4B00] flex items-center space-x-2">
+            <span>🛡️</span>
+            <span><strong>Ingestion Invariant:</strong> Raw response is stored verbatim before any transformation. Zero data loss.</span>
+          </div>
+        </div>
+
+        <!-- 1.3 Lossless Raw Storage & Normalization Pipeline -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase text-[#137333] tracking-wider flex items-center space-x-1.5">
+                <span class="w-2 h-2 rounded-full bg-[#1E8E3E]"></span>
+                <span>Lossless Raw Persistence</span>
+              </span>
+              <span class="text-[11px] font-mono bg-[#E6F4EA] text-[#137333] px-2 py-0.5 rounded">gain.storage.raw.*</span>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#CEEAD6] bg-[#E6F4EA]/30 mb-3">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#137333]">RawStore (JSONL Filesystem Hierarchy)</span>
+                <span class="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded text-[#137333] border border-[#CEEAD6]">JSONL</span>
+              </div>
+              <p class="text-[11px] text-[#3C4043] mt-1 font-mono">
+                data/raw/{source}/{partition}/{run_id}.jsonl
+              </p>
+              <div class="mt-2 text-[11px] text-[#5F6368] space-y-0.5">
+                <div>• Ingestion Run ID (UUID)</div>
+                <div>• Verified UTC Collection Timestamp</div>
+                <div>• Repository Identity & Pagination Coordinates</div>
+                <div>• Offline Replayability: <code>replay_run()</code></div>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-[#202124]">Defensive Normalization & Quarantine</span>
+                <span class="text-[10px] font-mono text-[#5F6368]">gain.schema</span>
+              </div>
+              <p class="text-[11px] text-[#5F6368] mt-1">
+                Pydantic v2 defensive validation. Quarantined malformed payloads into <code>normalization_errors.json</code> without failing run.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 p-2.5 bg-[#E8F0FE] border border-[#D2E3FC] rounded-lg text-[11px] text-[#174EA6] flex items-center space-x-2">
+            <span>🔄</span>
+            <span><strong>Replay Guarantee:</strong> Full platform metrics can be reproduced offline purely from raw JSONL archives.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TIER 2: CANONICAL DOMAIN MODELS & DETERMINISTIC ANALYTICAL ENGINE       -->
+    <!-- ===================================================================== -->
+    <section id="tier-analytics" class="gcp-boundary p-6 transition-all duration-300">
+      <div class="absolute -top-3.5 left-6 bg-white px-3 py-0.5 rounded-full border border-[#DADCE0] shadow-xs flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#1A73E8]"></span>
+        <span class="text-xs font-bold font-google-sans uppercase tracking-wider text-[#3C4043]">
+          Tier 2: Canonical Domain Entities & Pure Deterministic Analytics Engine
+        </span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6 mt-3">
+        <!-- 2.1 Transport-Independent Canonical Domain Models -->
+        <div class="col-span-12 lg:col-span-5 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider flex items-center space-x-1.5">
+              <span>Canonical Domain Models</span>
+            </span>
+            <span class="text-[11px] font-mono bg-[#E8F0FE] text-[#1A73E8] px-2 py-0.5 rounded">gain.model.*</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <!-- PullRequest -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] hover:border-[#1A73E8] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">PullRequest</span>
+                <span class="text-[9px] font-mono px-1 rounded bg-[#E8F0FE] text-[#1A73E8]">Frozen</span>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1">
+                Zero GraphQL artifacts (no edges/nodes/pageInfo). UTC normalized, state machine enforcement, author login, additions/deletions.
+              </p>
+            </div>
+
+            <!-- CanonicalIssue -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] hover:border-[#1A73E8] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">CanonicalIssue</span>
+                <span class="text-[9px] font-mono px-1 rounded bg-[#FEF7E0] text-[#B06000]">Jira/Linear</span>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1">
+                Cross-system work item mapping. Key, summary, issue_type, status category, story_points, linked_pr_numbers, cycle time.
+              </p>
+            </div>
+
+            <!-- CanonicalDeployment -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] hover:border-[#1A73E8] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">CanonicalDeployment</span>
+                <span class="text-[9px] font-mono px-1 rounded bg-[#E6F4EA] text-[#137333]">CI/CD</span>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1">
+                Deployment environments (production, staging), status (success, failure), commit_sha, duration_seconds, rollback tracking.
+              </p>
+            </div>
+
+            <!-- AiDeveloperTelemetry -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] hover:border-[#1A73E8] transition-all">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">AiDeveloperTelemetry</span>
+                <span class="text-[9px] font-mono px-1 rounded bg-[#F3E8FD] text-[#9334E8]">Copilot</span>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1">
+                Developer ID, active days, suggestions, acceptances, lines suggested/accepted, acceptance_rate computed field.
+              </p>
+            </div>
+          </div>
+
+          <!-- Columnar Storage (Parquet) -->
+          <div class="mt-4 p-3 rounded-lg bg-[#E6F4EA]/40 border border-[#CEEAD6] flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="text-base">📊</span>
+              <div>
+                <span class="text-xs font-bold text-[#137333]">Columnar Analytics Storage</span>
+                <span class="text-[11px] text-[#5F6368] block">PyArrow & Polars Parquet datasets partitioned under <code>data/canonical/</code></span>
+              </div>
+            </div>
+            <span class="text-[10px] font-mono bg-white text-[#137333] px-2 py-1 rounded border border-[#CEEAD6] font-semibold">
+              .parquet
+            </span>
+          </div>
+        </div>
+
+        <!-- 2.2 Deterministic Metric Services (Zero LLM in Math) -->
+        <div class="col-span-12 lg:col-span-7 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider flex items-center space-x-1.5">
+              <span>Deterministic Analytical Services</span>
+              <span class="text-[10px] px-2 py-0.2 rounded-full bg-[#E8F0FE] text-[#1A73E8] font-mono">Pure Python</span>
+            </span>
+            <span class="text-[11px] font-mono text-[#5F6368]">docs/metrics/metric-catalog.yaml</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <!-- PR Cycle Time & Flow -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">PR Flow Metrics</span>
+                <span class="text-[9px] font-mono text-[#1A73E8]">GAIN-PR-001/010</span>
+              </div>
+              <ul class="text-[11px] text-[#5F6368] mt-2 space-y-1">
+                <li>• <strong>Cycle Time:</strong> <code>merged_at - created_at</code></li>
+                <li>• Percentiles: p50, p75, p90, p95, mean</li>
+                <li>• Unmerged exclusion rule</li>
+                <li>• Monthly balance sheet accounting</li>
+              </ul>
+            </div>
+
+            <!-- AI Impact & Confounders -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">AI Impact Analysis</span>
+                <span class="text-[9px] font-mono text-[#9334E8]">Gate 8</span>
+              </div>
+              <ul class="text-[11px] text-[#5F6368] mt-2 space-y-1">
+                <li>• Active vs Non-Active AI cohorts</li>
+                <li>• <strong>Confounder Detection:</strong> PR size bias</li>
+                <li>• Zero-causal claim enforcement</li>
+                <li>• Claim Tag: <code>Associated</code></li>
+              </ul>
+            </div>
+
+            <!-- AI Economic ROI Model -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">4-Stage Economic ROI</span>
+                <span class="text-[9px] font-mono text-[#137333]">Modeled</span>
+              </div>
+              <ul class="text-[11px] text-[#5F6368] mt-2 space-y-1">
+                <li>• Tool cost amortization ($/seat/mo)</li>
+                <li>• Blended hourly wage baseline</li>
+                <li>• 3-tier sensitivity (0.5x, 1.0x, 1.5x)</li>
+                <li>• Claim Tag: <code>Modeled</code> / <code>Assumed</code></li>
+              </ul>
+            </div>
+
+            <!-- DORA Delivery Metrics -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">DORA Delivery Flow</span>
+                <span class="text-[9px] font-mono text-[#D93025]">GAIN-DORA-*</span>
+              </div>
+              <ul class="text-[11px] text-[#5F6368] mt-2 space-y-1">
+                <li>• Deployment Frequency (deploys/day)</li>
+                <li>• Change Failure Rate (%)</li>
+                <li>• Lead Time for Changes (commit-to-prod)</li>
+                <li>• Mean Time to Restore (MTTR)</li>
+              </ul>
+            </div>
+
+            <!-- Issue Flow & Traceability -->
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">Issue Velocity</span>
+                <span class="text-[9px] font-mono text-[#B06000]">GAIN-ISSUE-*</span>
+              </div>
+              <ul class="text-[11px] text-[#5F6368] mt-2 space-y-1">
+                <li>• Work item resolution cycle times</li>
+                <li>• Cross-system PR traceability rate</li>
+                <li>• Explicit vs Inferred linkage</li>
+                <li>• Velocity distributions (days)</li>
+              </ul>
+            </div>
+
+            <!-- Metric Governance Catalog -->
+            <div class="p-3 rounded-lg border border-[#CEEAD6] bg-[#E6F4EA]/30">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#137333]">Metric Catalog</span>
+                <span class="text-[9px] font-mono text-[#137333]">Contract</span>
+              </div>
+              <p class="text-[11px] text-[#3C4043] mt-1.5">
+                Versioned YAML schema contract. Every calculation validates metric ID, version, unit, and deterministic formula.
+              </p>
+            </div>
+          </div>
+
+          <div class="mt-4 p-2.5 bg-[#FCE8E6] border border-[#FAD2CF] rounded-lg text-[11px] text-[#C5221F] flex items-center space-x-2">
+            <span>⛔</span>
+            <span><strong>Zero-LLM Directives:</strong> Mathematical calculations and statistical summaries are pure Python. LLM reasoning in numerical calculation is strictly forbidden.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TIER 3: GOVERNED MODEL CONTEXT PROTOCOL (MCP) SERVER                   -->
+    <!-- ===================================================================== -->
+    <section id="tier-mcp" class="gcp-boundary p-6 transition-all duration-300">
+      <div class="absolute -top-3.5 left-6 bg-white px-3 py-0.5 rounded-full border border-[#DADCE0] shadow-xs flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#FBBC04]"></span>
+        <span class="text-xs font-bold font-google-sans uppercase tracking-wider text-[#3C4043]">
+          Tier 3: Governed GAIN Model Context Protocol (MCP) Server Interface
+        </span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6 mt-3">
+        <!-- 3.1 Transports & Security Gate -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase text-[#B06000] tracking-wider">Protocol Gate & Auth</span>
+              <span class="text-[11px] font-mono bg-[#FEF7E0] text-[#B06000] px-2 py-0.5 rounded">gain.mcp.auth</span>
+            </div>
+
+            <div class="space-y-3">
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-bold text-[#202124] flex items-center justify-between">
+                  <span>Dual Transport Layer</span>
+                  <span class="text-[10px] font-mono text-[#5F6368]">Stdio & SSE</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Supports local IDE CLI execution via <strong>Stdio</strong> and remote multi-tenant agent execution via <strong>Server-Sent Events (SSE)</strong>.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-bold text-[#202124] flex items-center justify-between">
+                  <span>Auth & RBAC Middleware</span>
+                  <span class="text-[10px] font-mono text-[#5F6368]">Bearer Token</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Principal verification (Bearer token, API key), tenant isolation, token-bucket rate limiting (100 req/min), audit context propagation.
+                </p>
+              </div>
+
+              <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+                <div class="text-xs font-bold text-[#202124] flex items-center justify-between">
+                  <span>Audit Logging & Telemetry</span>
+                  <span class="text-[10px] font-mono text-[#5F6368]">structlog</span>
+                </div>
+                <p class="text-[11px] text-[#5F6368] mt-1">
+                  Structured JSON audit envelopes recording operation name, duration_ms, request_id, principal_id, and data quality scores.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-2.5 bg-[#FEF7E0] border border-[#FEEFC3] rounded-lg text-[11px] text-[#7A4B00] flex items-center space-x-2">
+            <span>🔒</span>
+            <span><strong>Read-Only Boundary:</strong> GAIN MCP server operates in read-only analytical mode. Zero arbitrary mutation capabilities.</span>
+          </div>
+        </div>
+
+        <!-- 3.2 12 Governed MCP Tools -->
+        <div class="col-span-12 lg:col-span-8 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider">12 Governed Domain Tools & Resources</span>
+            <span class="text-[11px] font-mono bg-[#E8F0FE] text-[#1A73E8] px-2 py-0.5 rounded">gain.mcp.tools.*</span>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5 text-xs">
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">query_engineering_metrics</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Calculates GAIN-PR-001 & PR-010 stats</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">compare_cohorts</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Statistical comparison of developer cohorts</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#9334E8] block truncate">analyze_ai_impact</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Evaluates AI velocity delta & confounders</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#137333] block truncate">calculate_ai_roi</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">4-stage economic ROI & sensitivity matrix</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#D93025] block truncate">get_dora_metrics</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Deployment frequency, CFR, lead time</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#B06000] block truncate">get_data_quality</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Freshness, completeness, quarantine errors</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">get_evidence</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Retrieves verifiable cryptographic evidence pack</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">explain_metric</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Official Metric Catalog definition & formula</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">get_metric_lineage</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Data lineage from raw JSONL to observation</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#1A73E8] block truncate">get_canonical_entity</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Direct entity lookup (PR, Issue, Deployment)</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#5F6368] block truncate">start_investigation</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Initializes audited investigation session</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <span class="font-mono text-[11px] font-bold text-[#5F6368] block truncate">get_investigation</span>
+              <span class="text-[10px] text-[#5F6368] block mt-0.5">Retrieves audit status and claim packages</span>
+            </div>
+          </div>
+
+          <!-- MCP Resources & Prompt Templates -->
+          <div class="mt-4 pt-3 border-t border-[#E8EAED] flex items-center justify-between text-xs text-[#5F6368]">
+            <div class="flex items-center space-x-4">
+              <span><strong>Resources:</strong> <code>engineering://metrics/*</code>, <code>lineage://*</code>, <code>evidence://*</code></span>
+              <span>•</span>
+              <span><strong>Prompts:</strong> <code>investigate_cycle_time_regression</code>, <code>assess_ai_impact</code></span>
+            </div>
+            <span class="text-[11px] font-mono px-2 py-0.5 rounded bg-[#E6F4EA] text-[#137333]">MCP Protocol v1.0</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TIER 4: AUTONOMOUS ENGINEERING INTELLIGENCE AGENT                      -->
+    <!-- ===================================================================== -->
+    <section id="tier-agent" class="gcp-boundary p-6 transition-all duration-300">
+      <div class="absolute -top-3.5 left-6 bg-white px-3 py-0.5 rounded-full border border-[#DADCE0] shadow-xs flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#9334E8]"></span>
+        <span class="text-xs font-bold font-google-sans uppercase tracking-wider text-[#3C4043]">
+          Tier 4: Autonomous Engineering Intelligence Agent & Claim Classification
+        </span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6 mt-3">
+        <!-- 4.1 Orchestrator Core & Lifecycle -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#9334E8] tracking-wider">Agent Orchestrator</span>
+            <span class="text-[11px] font-mono bg-[#F3E8FD] text-[#9334E8] px-2 py-0.5 rounded">gain.agent.*</span>
+          </div>
+
+          <div class="space-y-2.5">
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">AgentGateway</span>
+                <span class="text-[10px] font-mono text-[#5F6368]">Context & Budget</span>
+              </div>
+              <p class="text-[11px] text-[#5F6368] mt-1">
+                Enforces plan step limits (max 10), token budgets, correlation tracking (<code>request_id</code>, <code>investigation_id</code>), principal authorization.
+              </p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">InvestigationPlanner</span>
+                <span class="text-[10px] font-mono text-[#5F6368]">Methodology Engine</span>
+              </div>
+              <p class="text-[11px] text-[#5F6368] mt-1">
+                Constructs deterministic multi-step plans for Flow Health, AI Impact, DORA assessment, and work tracking.
+              </p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-[#202124]">PolicyGuard</span>
+                <span class="text-[10px] font-mono text-[#D93025]">Security Gate</span>
+              </div>
+              <p class="text-[11px] text-[#5F6368] mt-1">
+                Detects prompt injections, forbids mutation/push operations, enforces zero-LLM calculation boundaries.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4.2 Tool Router & Dual System Execution -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider">Tool Router & Failure Isolation</span>
+            <span class="text-[11px] font-mono bg-[#E8F0FE] text-[#1A73E8] px-2 py-0.5 rounded">gain.agent.router</span>
+          </div>
+
+          <div class="p-3 rounded-lg border border-[#D2E3FC] bg-[#E8F0FE]/40 mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#1A73E8]">Primary: GAIN MCP Server</span>
+              <span class="text-[10px] font-mono bg-white px-1.5 py-0.5 rounded text-[#1A73E8] border border-[#D2E3FC]">Authoritative</span>
+            </div>
+            <p class="text-[11px] text-[#3C4043] mt-1">
+              Dispatches to governed analytical tools. Never falls back to ad-hoc LLM reasoning if service is offline.
+            </p>
+          </div>
+
+          <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] mb-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-[#202124]">Secondary: GitHub MCP Interface</span>
+              <span class="text-[10px] font-mono text-[#5F6368]">Operational Fallback</span>
+            </div>
+            <p class="text-[11px] text-[#5F6368] mt-1">
+              Read-only operations for repository metadata, recent commits, workflow run status. Graceful degradation when offline.
+            </p>
+          </div>
+
+          <div class="p-2.5 rounded-lg border border-[#E8EAED] bg-[#F8F9FA] text-[11px] text-[#5F6368]">
+            <strong>Circuit Breaker:</strong> MCP errors raise <code>GainMcpUnavailableError</code> rather than calculating metrics heuristically.
+          </div>
+        </div>
+
+        <!-- 4.3 Evidence Synthesizer & 7-Tier Claim Classifier -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#137333] tracking-wider">7-Tier Claim Classification</span>
+            <span class="text-[11px] font-mono bg-[#E6F4EA] text-[#137333] px-2 py-0.5 rounded">EvidenceSynthesizer</span>
+          </div>
+
+          <div class="space-y-1.5 text-xs">
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#E8F0FE] text-[#174EA6] border border-[#D2E3FC]">
+              <span class="font-bold">1. Observed</span>
+              <span class="text-[10px]">Verbatim raw GitHub telemetry records</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#E6F4EA] text-[#137333] border border-[#CEEAD6]">
+              <span class="font-bold">2. Derived</span>
+              <span class="text-[10px]">Deterministic mathematical metrics</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#F3E8FD] text-[#7627BB] border border-[#E9D2FD]">
+              <span class="font-bold">3. Associated</span>
+              <span class="text-[10px]">Statistical cohort correlation (AI delta)</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#FEF7E0] text-[#B06000] border border-[#FEEFC3]">
+              <span class="font-bold">4. Attributed</span>
+              <span class="text-[10px]">Causal relationship (requires evidence)</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#F1F3F4] text-[#3C4043] border border-[#DADCE0]">
+              <span class="font-bold">5. Modeled</span>
+              <span class="text-[10px]">Parameterized projections (AI ROI)</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#FFF0F5] text-[#9C27B0] border border-[#F8BBD0]">
+              <span class="font-bold">6. Assumed</span>
+              <span class="text-[10px]">Benchmark baseline values ($85/hr wage)</span>
+            </div>
+            <div class="flex items-center justify-between p-1.5 rounded bg-[#FCE8E6] text-[#C5221F] border border-[#FAD2CF]">
+              <span class="font-bold">7. Unknown</span>
+              <span class="text-[10px]">Missing telemetry or unverified assertions</span>
+            </div>
+          </div>
+
+          <div class="mt-3 p-2 bg-[#F8F9FA] border border-[#E8EAED] rounded text-[10px] text-[#5F6368]">
+            <strong>LLMGateway:</strong> Synthesis restricted to evidence packages. Zero halluncination of metrics permitted.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- TIER 5: ANTIGRAVITY MULTI-AGENT ENGINEERING HUB & INTERFACES          -->
+    <!-- ===================================================================== -->
+    <section id="tier-antigravity" class="gcp-boundary p-6 transition-all duration-300">
+      <div class="absolute -top-3.5 left-6 bg-white px-3 py-0.5 rounded-full border border-[#DADCE0] shadow-xs flex items-center space-x-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#4285F4]"></span>
+        <span class="text-xs font-bold font-google-sans uppercase tracking-wider text-[#3C4043]">
+          Tier 5: Antigravity Multi-Agent Engineering Hub & Developer Interfaces
+        </span>
+      </div>
+
+      <div class="grid grid-cols-12 gap-6 mt-3">
+        <!-- 5.1 6 Persistent Specialist Subagents -->
+        <div class="col-span-12 lg:col-span-8 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0]">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase text-[#1A73E8] tracking-wider">6 Persistent Specialist Subagents (.agents/agents/*)</span>
+            <span class="text-[11px] font-mono bg-[#E8F0FE] text-[#1A73E8] px-2 py-0.5 rounded">Antigravity Multi-Agent Runtime</span>
+          </div>
+
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🏛️</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-architect</span>
+                  <span class="text-[10px] text-[#5F6368]">Architecture & ADRs</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Guards boundaries, prevents coupling, verifies transport independence.</p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">💾</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-data-engineer</span>
+                  <span class="text-[10px] text-[#5F6368]">Data Platform & Parquet</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Manages JSONL raw store, schemas, Arrow persistence, and provenance.</p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">📈</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-analytics-engineer</span>
+                  <span class="text-[10px] text-[#5F6368]">Deterministic Metrics</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Enforces Metric Catalog, pure Python calculations, DORA & ROI algorithms.</p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">⚙️</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-platform-engineer</span>
+                  <span class="text-[10px] text-[#5F6368]">Platform & Packaging</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Maintains Python packaging, structlog logging, config, and CLI interfaces.</p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🛡️</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-security-engineer</span>
+                  <span class="text-[10px] text-[#5F6368]">Security & Safety</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Credential isolation, token masking, prompt injection defense, RBAC.</p>
+            </div>
+
+            <div class="p-3 rounded-lg border border-[#E8EAED] bg-[#F8F9FA]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base">🧪</span>
+                <div>
+                  <span class="text-xs font-bold text-[#202124] block">gain-verification-engineer</span>
+                  <span class="text-[10px] text-[#5F6368]">Test & Quality Gates</span>
+                </div>
+              </div>
+              <p class="text-[10px] text-[#5F6368] mt-1.5">Automated test suites, mypy strict verification, ruff, regression defense.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5.2 Developer & Operator Interfaces -->
+        <div class="col-span-12 lg:col-span-4 bg-[#FFFFFF] rounded-xl p-4 border border-[#DADCE0] flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold uppercase text-[#3C4043] tracking-wider">CLI & Protocol Consumers</span>
+              <span class="text-[11px] font-mono bg-[#F1F3F4] text-[#3C4043] px-2 py-0.5 rounded">gain CLI</span>
+            </div>
+
+            <div class="space-y-2 text-xs font-mono">
+              <div class="p-2 rounded bg-[#202124] text-[#81C995] truncate">
+                $ gain demo
+              </div>
+              <div class="p-2 rounded bg-[#202124] text-[#8AB4F8] truncate">
+                $ gain backfill --repo firmsoil/gain
+              </div>
+              <div class="p-2 rounded bg-[#202124] text-[#FDD663] truncate">
+                $ gain dora --repo firmsoil/gain
+              </div>
+              <div class="p-2 rounded bg-[#202124] text-[#E8EAED] truncate">
+                $ gain agent investigate "What is our cycle time?"
+              </div>
+              <div class="p-2 rounded bg-[#202124] text-[#C58AF9] truncate">
+                $ gain mcp serve --transport stdio
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 p-2.5 bg-[#E8F0FE] border border-[#D2E3FC] rounded-lg text-[11px] text-[#174EA6] flex items-center space-x-2">
+            <span>💻</span>
+            <span>Seamless integration into <strong>Antigravity IDE</strong>, Claude Desktop, Cursor, and enterprise CI/CD pipelines.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================== -->
+    <!-- ARCHITECTURAL GUARANTEES & LEGEND FOOTER                             -->
+    <!-- ===================================================================== -->
+    <footer class="bg-white border border-[#DADCE0] rounded-xl p-6 shadow-xs">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div>
+          <h5 class="text-xs font-bold uppercase text-[#5F6368] tracking-wider mb-2">1. Source of Truth</h5>
+          <p class="text-xs text-[#3C4043]">
+            GitHub telemetry remains immutable ground truth. Raw responses are stored losslessly in JSONL format before any domain transformation.
+          </p>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase text-[#5F6368] tracking-wider mb-2">2. Zero-LLM In Math</h5>
+          <p class="text-xs text-[#3C4043]">
+            All metric computations (Cycle Time, Monthly Stats, DORA, AI ROI) are pure Python deterministic algorithms explicitly cataloged and versioned.
+          </p>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase text-[#5F6368] tracking-wider mb-2">3. Transport Independence</h5>
+          <p class="text-xs text-[#3C4043]">
+            Canonical domain models expose zero GraphQL artifacts (cursors, pageInfo, connections), isolating analytics from upstream protocol shifts.
+          </p>
+        </div>
+
+        <div>
+          <h5 class="text-xs font-bold uppercase text-[#5F6368] tracking-wider mb-2">4. Claim Traceability</h5>
+          <p class="text-xs text-[#3C4043]">
+            All agent findings are tagged with one of 7 claim classifications (<code>Observed</code>, <code>Derived</code>, <code>Associated</code>, etc.) backed by verifiable evidence.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-[#F1F3F4] flex flex-wrap items-center justify-between text-xs text-[#5F6368]">
+        <div class="flex items-center space-x-4">
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#1A73E8]"></span><span>Blue: Analytics & Models</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#1E8E3E]"></span><span>Green: Columnar Storage</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#FBBC04]"></span><span>Yellow: MCP Governance</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#EA4335]"></span><span>Red: External Endpoints</span></span>
+          <span class="flex items-center space-x-1.5"><span class="w-3 h-3 rounded-full bg-[#9334E8]"></span><span>Purple: Agent Intelligence</span></span>
+        </div>
+        <div class="mt-2 md:mt-0 font-medium">
+          GAIN Platform Architecture Specification • Production Verified
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <!-- INTERACTIVE COMPONENT DETAILS MODAL (POPUP) -->
+  <div id="component-modal" class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden" onclick="closeModal(event)">
+    <div class="bg-white rounded-xl max-w-xl w-full p-6 shadow-xl border border-[#DADCE0]" onclick="event.stopPropagation()">
+      <div class="flex items-center justify-between border-b border-[#F1F3F4] pb-3">
+        <h3 id="modal-title" class="text-lg font-bold font-google-sans text-[#202124]">Component Details</h3>
+        <button onclick="closeModal()" class="text-[#5F6368] hover:text-[#202124] text-lg font-bold">✕</button>
+      </div>
+      <div id="modal-body" class="mt-4 text-sm text-[#3C4043] space-y-3">
+        <!-- Injected via JavaScript -->
+      </div>
+      <div class="mt-6 pt-3 border-t border-[#F1F3F4] flex justify-end">
+        <button onclick="closeModal()" class="px-4 py-2 bg-[#1A73E8] text-white rounded-lg text-xs font-medium hover:bg-[#1557B0]">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function highlightLayer(targetId) {
+      // Update Tab Styles
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.getAttribute('data-target') === targetId) {
+          btn.className = "tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-[#1A73E8] text-white shadow-xs";
+        } else {
+          btn.className = "tab-btn px-3.5 py-1.5 rounded-full font-medium text-xs bg-white text-[#3C4043] border border-[#DADCE0] hover:bg-[#F8F9FA]";
+        }
+      });
+
+      // Highlight Tiers
+      const sections = ['tier-ingest', 'tier-analytics', 'tier-mcp', 'tier-agent', 'tier-antigravity'];
+      sections.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        if (targetId === 'all' || targetId === id) {
+          el.style.opacity = '1';
+          el.style.transform = 'scale(1)';
+          el.style.borderColor = '#DADCE0';
+        } else {
+          el.style.opacity = '0.35';
+          el.style.transform = 'scale(0.995)';
+        }
+      });
+    }
+
+    const componentData = {
+      gh_source: {
+        title: "GitHub GraphQL & REST API Endpoint",
+        content: `
+          <p><strong>Primary External Source:</strong> Ingests pull requests, reviews, commits, labels, and deployments directly from <code>api.github.com/graphql</code>.</p>
+          <p><strong>Constraints:</strong> Must be treated as external untrusted payload. Lossless capture guarantees historical replayability. Zero direct computation is allowed during transport.</p>
+          <div class="p-3 bg-[#F8F9FA] rounded border border-[#E8EAED] text-xs font-mono">
+            GET / POST api.github.com/graphql<br>
+            Headers: X-GitHub-Api-Version: 2022-11-28
+          </div>
+        `
+      },
+      copilot_source: {
+        title: "GitHub Copilot Developer Telemetry",
+        content: `
+          <p><strong>Authoritative AI Tooling Data:</strong> Captures developer-level Copilot adoption metrics: active coding days, code suggestions shown, suggestions accepted, and lines accepted.</p>
+          <p><strong>Claim Integrity:</strong> Enables objective calculation of acceptance rates (32.7% benchmark) without inferring or guessing AI involvement from commit diffs.</p>
+          <div class="p-3 bg-[#F8F9FA] rounded border border-[#E8EAED] text-xs font-mono">
+            gain.model.ai.AiDeveloperTelemetry<br>
+            Stored in: data/canonical/ai_telemetry__*.parquet
+          </div>
+        `
+      },
+      jira_source: {
+        title: "Jira & Linear Enterprise Source Adapters",
+        content: `
+          <p><strong>Enterprise Work Tracking:</strong> Normalizes work items across Jira Cloud REST and Linear into the unified <code>CanonicalIssue</code> model.</p>
+          <p><strong>Features:</strong> Story point tracking, issue resolution cycle time, sprint velocity, and deterministic PR cross-system traceability (75% coverage).</p>
+        `
+      },
+      deployment_source: {
+        title: "CI/CD & Production Deployment Telemetry",
+        content: `
+          <p><strong>DORA Foundation:</strong> Ingests deployment runs across GitHub Actions, ArgoCD, and Spinnaker.</p>
+          <p><strong>Metrics:</strong> Provides the empirical events required to calculate Deployment Frequency, Change Failure Rate, and Mean Time to Restore (MTTR).</p>
+        `
+      }
+    };
+
+    function showDetails(key) {
+      const data = componentData[key];
+      if (!data) return;
+      document.getElementById('modal-title').innerText = data.title;
+      document.getElementById('modal-body').innerHTML = data.content;
+      document.getElementById('component-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('component-modal').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

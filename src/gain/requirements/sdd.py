@@ -17,7 +17,6 @@ def build_specification_seed(story: CanonicalStory) -> SDDSpecificationSeed:
         source_context_id=story.source_context_id,
         source_context_version=story.source_context_version,
         external_references=list(story.external_references),
-
         product_requirements={
             "summary": story.summary,
             "description": story.description,

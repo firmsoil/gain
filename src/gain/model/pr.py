@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class PullRequest(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", frozen=True)
 
     github_node_id: str
     number: int = Field(gt=0)
@@ -26,6 +26,15 @@ class PullRequest(BaseModel):
     review_decision: str | None = None
     collected_at: datetime
     ingestion_run_id: str
+
+    @field_validator("created_at", "closed_at", "merged_at", "collected_at", mode="after")
+    @classmethod
+    def ensure_utc(cls, value: datetime | None) -> datetime | None:
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.replace(tzinfo=UTC)
+        return value.astimezone(UTC)
 
     @field_validator("state")
     @classmethod

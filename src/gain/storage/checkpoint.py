@@ -15,7 +15,8 @@ class CheckpointStore:
         if not path.exists():
             return {"repository": repository, "next_page": 1, "cursor": None}
         data = json.loads(path.read_text(encoding="utf-8"))
-        return dict(data.get(repository, {"repository": repository, "next_page": 1, "cursor": None}))
+        default_state = {"repository": repository, "next_page": 1, "cursor": None}
+        return dict(data.get(repository, default_state))
 
     def save(self, ingestion_run_id: str, repository: str, state: dict[str, Any]) -> None:
         path = self.root / f"{ingestion_run_id}__checkpoint.json"

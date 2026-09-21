@@ -34,7 +34,6 @@ from gain.requirements.storage import RequirementsStore
 log = structlog.get_logger(__name__)
 
 
-
 class JiraDescriptionFormat(StrEnum):
     WIKI = "wiki"
     ADF = "adf"
@@ -431,7 +430,6 @@ class JiraStoryMapper:
         )
 
 
-
 class IssueTrackerAdapter(Protocol):
     def find_story_by_external_reference(self, story_id: str) -> Mapping[str, Any] | None: ...
 
@@ -597,7 +595,6 @@ class JiraSynchronizationService:
         updated_refs = [r for r in story.external_references if r.external_system != "jira"]
         updated_refs.append(jira_ref)
 
-
         updated = story.model_copy(
             update={
                 "version": story.version + 1,
@@ -620,4 +617,3 @@ class JiraSynchronizationService:
 
 
 JiraRequirementMapper = JiraStoryMapper
-

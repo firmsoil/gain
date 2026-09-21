@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from collections.abc import Iterable
-from datetime import datetime, timezone
-from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -26,7 +24,13 @@ class PullRequestBackfill:
     def run(self, ingestion_run_id: str | None = None) -> dict[str, Any]:
         self.settings.ensure_directories()
         run_id = ingestion_run_id or str(uuid.uuid4())
-        totals = {"run_id": run_id, "repositories": 0, "pages": 0, "nodes": 0, "started_at": datetime.now(timezone.utc).isoformat()}
+        totals: dict[str, Any] = {
+            "run_id": run_id,
+            "repositories": 0,
+            "pages": 0,
+            "nodes": 0,
+            "started_at": datetime.now(UTC).isoformat(),
+        }
         for repository in self.settings.github_repos:
             owner, name = repository.split("/", 1)
             checkpoint = self.checkpoints.load(run_id, repository)
@@ -51,8 +55,8 @@ class PullRequestBackfill:
                     repository_name_with_owner=page.repository_name_with_owner,
                     nodes=relevant,
                 )
-                totals["pages"] += 1
-                totals["nodes"] += len(relevant)
+                totals["pages"] = int(totals["pages"]) + 1
+                totals["nodes"] = int(totals["nodes"]) + len(relevant)
                 next_page = page_number + 1
                 self.checkpoints.save(
                     run_id,
@@ -61,14 +65,20 @@ class PullRequestBackfill:
                 )
                 page_number = next_page
                 cursor = page.end_cursor
-            totals["repositories"] += 1
-        totals["completed_at"] = datetime.now(timezone.utc).isoformat()
+            totals["repositories"] = int(totals["repositories"]) + 1
+        totals["completed_at"] = datetime.now(UTC).isoformat()
         return totals
 
     def _in_window(self, node: dict[str, Any]) -> bool:
-        created = _parse_datetime(node.get("createdAt"))
+        created_raw = node.get("createdAt")
+        if not isinstance(created_raw, str):
+            return False
+        created = _parse_datetime(created_raw)
         return self.settings.start_at <= created <= self.settings.end_at
 
 
 def _parse_datetime(value: str) -> datetime:
-    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)

@@ -12,6 +12,7 @@ This script demonstrates the full GAIN pipeline **without** a live GitHub token:
 Usage:
     python scripts/demo_offline.py
 """
+
 from __future__ import annotations
 
 import json
@@ -51,85 +52,154 @@ def build_synthetic_pr_dataset() -> list[dict]:
     # 12 monthly templates: (year, month, pr_definitions)
     # PR tuple: (repo, pr_num, author, author_type, day, delay, unmerged, draft, add, del, files)
     monthly_plan = [
-        ("2025-09", [
-            ("backend", 101, "alice", "User", 2, 0.2, False, False, 45, 10, 2),
-            ("backend", 102, "bob", "User", 15, 3.5, False, False, 210, 40, 6),
-            ("frontend", 201, "grace", "User", 20, 1.0, False, False, 90, 15, 3),
-        ]),
-        ("2025-10", [
-            ("backend", 103, "carol", "User", 5, 0.5, False, False, 30, 5, 1),
-            ("backend", 104, "dependabot[bot]", "Bot", 12, 0.1, False, False, 5, 5, 1),
-            # Closed unmerged
-            ("frontend", 202, "henry", "User", 18, None, True, False, 120, 80, 5),
-        ]),
-        ("2025-11", [
-            ("backend", 105, "alice", "User", 8, 2.0, False, False, 180, 30, 4),
-            ("frontend", 203, "grace", "User", 14, 0.4, False, False, 55, 12, 2),
-            ("frontend", 204, "henry", "User", 22, 4.0, False, False, 310, 95, 9),
-        ]),
-        ("2025-12", [
-            ("backend", 106, "dave", "User", 3, 1.5, False, False, 95, 20, 3),
-            ("backend", 107, "bob", "User", 10, 5.0, False, False, 420, 110, 11),
-            ("frontend", 205, "grace", "User", 19, 0.3, False, False, 25, 4, 1),
-        ]),
-        ("2026-01", [
-            ("backend", 108, "alice", "User", 7, 0.8, False, False, 60, 15, 2),
-            ("backend", 109, "eve", "User", 16, None, True, False, 75, 25, 4),  # Closed unmerged
-            ("frontend", 206, "henry", "User", 21, 2.2, False, False, 140, 35, 5),
-        ]),
-        ("2026-02", [
-            ("backend", 110, "carol", "User", 4, 1.1, False, False, 85, 18, 3),
-            ("backend", 111, "dependabot[bot]", "Bot", 11, 0.05, False, False, 2, 2, 1),
-            ("frontend", 207, "grace", "User", 24, 0.9, False, False, 70, 10, 2),
-        ]),
-        ("2026-03", [
-            ("backend", 112, "bob", "User", 6, 3.0, False, False, 260, 50, 7),
-            ("backend", 113, "alice", "User", 15, 0.4, False, False, 40, 8, 1),
-            ("frontend", 208, "henry", "User", 22, 1.8, False, False, 185, 45, 6),
-        ]),
-        ("2026-04", [
-            ("backend", 114, "dave", "User", 9, 2.5, False, False, 230, 60, 5),
-            ("frontend", 209, "grace", "User", 14, 0.5, False, False, 50, 12, 2),
-            ("frontend", 210, "henry", "User", 28, None, True, False, 90, 30, 3),  # Closed unmerged
-        ]),
-        ("2026-05", [
-            ("backend", 115, "alice", "User", 3, 0.6, False, False, 70, 15, 2),
-            ("backend", 116, "bob", "User", 12, 4.2, False, False, 350, 80, 10),
-            ("frontend", 211, "grace", "User", 20, 1.2, False, False, 110, 20, 4),
-        ]),
-        ("2026-06", [
-            ("backend", 117, "carol", "User", 5, 0.3, False, False, 25, 5, 1),
-            ("backend", 118, "eve", "User", 17, 2.0, False, False, 160, 40, 5),
-            ("frontend", 212, "henry", "User", 25, 3.1, False, False, 240, 70, 8),
-        ]),
-        ("2026-07", [
-            ("backend", 119, "dave", "User", 8, 1.8, False, False, 190, 45, 5),
-            ("backend", 120, "alice", "User", 19, 0.7, False, False, 65, 14, 2),
-            ("frontend", 213, "grace", "User", 23, 0.4, False, False, 35, 8, 1),
-        ]),
-        ("2026-08", [
-            ("backend", 121, "alice", "User", 1, 0.19, False, False, 82, 11, 4),
-            ("backend", 122, "bob", "User", 3, 3.27, False, False, 320, 95, 12),
-            ("backend", 123, "carol", "User", 5, 0.05, False, False, 12, 3, 1),
-            ("backend", 124, "dependabot[bot]", "Bot", 7, 0.02, False, False, 4, 4, 1),
-            # Outlier
-            ("backend", 125, "dave", "User", 10, 14.1, False, False, 1450, 280, 42),
-            # Closed unmerged
-            ("backend", 126, "eve", "User", 15, None, True, False, 60, 20, 3),
-            ("backend", 127, "frank", "User", 20, None, False, True, 30, 0, 2),       # Draft
-            ("backend", 128, "alice", "User", 25, 0.27, False, False, 145, 32, 7),
-            ("frontend", 214, "grace", "User", 2, 0.5, False, False, 200, 45, 8),
-            ("frontend", 215, "henry", "User", 8, 3.85, False, False, 510, 120, 15),
-            ("frontend", 216, "grace", "User", 18, 0.16, False, False, 25, 8, 2),
-            ("frontend", 217, "henry", "User", 28, None, False, False, 88, 22, 5),    # Open PR
-        ]),
+        (
+            "2025-09",
+            [
+                ("backend", 101, "alice", "User", 2, 0.2, False, False, 45, 10, 2),
+                ("backend", 102, "bob", "User", 15, 3.5, False, False, 210, 40, 6),
+                ("frontend", 201, "grace", "User", 20, 1.0, False, False, 90, 15, 3),
+            ],
+        ),
+        (
+            "2025-10",
+            [
+                ("backend", 103, "carol", "User", 5, 0.5, False, False, 30, 5, 1),
+                ("backend", 104, "dependabot[bot]", "Bot", 12, 0.1, False, False, 5, 5, 1),
+                # Closed unmerged
+                ("frontend", 202, "henry", "User", 18, None, True, False, 120, 80, 5),
+            ],
+        ),
+        (
+            "2025-11",
+            [
+                ("backend", 105, "alice", "User", 8, 2.0, False, False, 180, 30, 4),
+                ("frontend", 203, "grace", "User", 14, 0.4, False, False, 55, 12, 2),
+                ("frontend", 204, "henry", "User", 22, 4.0, False, False, 310, 95, 9),
+            ],
+        ),
+        (
+            "2025-12",
+            [
+                ("backend", 106, "dave", "User", 3, 1.5, False, False, 95, 20, 3),
+                ("backend", 107, "bob", "User", 10, 5.0, False, False, 420, 110, 11),
+                ("frontend", 205, "grace", "User", 19, 0.3, False, False, 25, 4, 1),
+            ],
+        ),
+        (
+            "2026-01",
+            [
+                ("backend", 108, "alice", "User", 7, 0.8, False, False, 60, 15, 2),
+                (
+                    "backend",
+                    109,
+                    "eve",
+                    "User",
+                    16,
+                    None,
+                    True,
+                    False,
+                    75,
+                    25,
+                    4,
+                ),  # Closed unmerged
+                ("frontend", 206, "henry", "User", 21, 2.2, False, False, 140, 35, 5),
+            ],
+        ),
+        (
+            "2026-02",
+            [
+                ("backend", 110, "carol", "User", 4, 1.1, False, False, 85, 18, 3),
+                ("backend", 111, "dependabot[bot]", "Bot", 11, 0.05, False, False, 2, 2, 1),
+                ("frontend", 207, "grace", "User", 24, 0.9, False, False, 70, 10, 2),
+            ],
+        ),
+        (
+            "2026-03",
+            [
+                ("backend", 112, "bob", "User", 6, 3.0, False, False, 260, 50, 7),
+                ("backend", 113, "alice", "User", 15, 0.4, False, False, 40, 8, 1),
+                ("frontend", 208, "henry", "User", 22, 1.8, False, False, 185, 45, 6),
+            ],
+        ),
+        (
+            "2026-04",
+            [
+                ("backend", 114, "dave", "User", 9, 2.5, False, False, 230, 60, 5),
+                ("frontend", 209, "grace", "User", 14, 0.5, False, False, 50, 12, 2),
+                (
+                    "frontend",
+                    210,
+                    "henry",
+                    "User",
+                    28,
+                    None,
+                    True,
+                    False,
+                    90,
+                    30,
+                    3,
+                ),  # Closed unmerged
+            ],
+        ),
+        (
+            "2026-05",
+            [
+                ("backend", 115, "alice", "User", 3, 0.6, False, False, 70, 15, 2),
+                ("backend", 116, "bob", "User", 12, 4.2, False, False, 350, 80, 10),
+                ("frontend", 211, "grace", "User", 20, 1.2, False, False, 110, 20, 4),
+            ],
+        ),
+        (
+            "2026-06",
+            [
+                ("backend", 117, "carol", "User", 5, 0.3, False, False, 25, 5, 1),
+                ("backend", 118, "eve", "User", 17, 2.0, False, False, 160, 40, 5),
+                ("frontend", 212, "henry", "User", 25, 3.1, False, False, 240, 70, 8),
+            ],
+        ),
+        (
+            "2026-07",
+            [
+                ("backend", 119, "dave", "User", 8, 1.8, False, False, 190, 45, 5),
+                ("backend", 120, "alice", "User", 19, 0.7, False, False, 65, 14, 2),
+                ("frontend", 213, "grace", "User", 23, 0.4, False, False, 35, 8, 1),
+            ],
+        ),
+        (
+            "2026-08",
+            [
+                ("backend", 121, "alice", "User", 1, 0.19, False, False, 82, 11, 4),
+                ("backend", 122, "bob", "User", 3, 3.27, False, False, 320, 95, 12),
+                ("backend", 123, "carol", "User", 5, 0.05, False, False, 12, 3, 1),
+                ("backend", 124, "dependabot[bot]", "Bot", 7, 0.02, False, False, 4, 4, 1),
+                # Outlier
+                ("backend", 125, "dave", "User", 10, 14.1, False, False, 1450, 280, 42),
+                # Closed unmerged
+                ("backend", 126, "eve", "User", 15, None, True, False, 60, 20, 3),
+                ("backend", 127, "frank", "User", 20, None, False, True, 30, 0, 2),  # Draft
+                ("backend", 128, "alice", "User", 25, 0.27, False, False, 145, 32, 7),
+                ("frontend", 214, "grace", "User", 2, 0.5, False, False, 200, 45, 8),
+                ("frontend", 215, "henry", "User", 8, 3.85, False, False, 510, 120, 15),
+                ("frontend", 216, "grace", "User", 18, 0.16, False, False, 25, 8, 2),
+                ("frontend", 217, "henry", "User", 28, None, False, False, 88, 22, 5),  # Open PR
+            ],
+        ),
     ]
 
     for ym, pr_list in monthly_plan:
         year, month = map(int, ym.split("-"))
         for (
-            repo_short, pr_num, author, a_type, c_day, merge_delay,
-            closed_unmerged, is_draft, adds, dels, files
+            repo_short,
+            pr_num,
+            author,
+            a_type,
+            c_day,
+            merge_delay,
+            closed_unmerged,
+            is_draft,
+            adds,
+            dels,
+            files,
         ) in pr_list:
             owner = "acme"
             name = repo_short
@@ -164,32 +234,34 @@ def build_synthetic_pr_dataset() -> list[dict]:
                 close_day = min(c_day + 2, 28)
                 closed_iso = f"{year:04d}-{month:02d}-{close_day:02d}T16:00:00Z"
 
-            records.append({
-                "metadata": {
-                    "collected_at": "2026-09-01T00:00:00+00:00",
-                    "cursor": None,
-                    "ingestion_run_id": DEMO_RUN_ID,
-                    "name": name,
-                    "owner": owner,
-                    "page_number": 1,
-                    "repository_id": repo_id,
-                    "repository_name_with_owner": repo_full,
-                },
-                "node": {
-                    "id": f"PR_{repo_short.upper()}_{pr_num}",
-                    "number": pr_num,
-                    "author": {"__typename": a_type, "login": author},
-                    "createdAt": created_iso,
-                    "closedAt": closed_iso,
-                    "mergedAt": merged_iso,
-                    "state": state,
-                    "isDraft": is_draft,
-                    "additions": adds,
-                    "deletions": dels,
-                    "changedFiles": files,
-                    "reviewDecision": review_dec,
-                },
-            })
+            records.append(
+                {
+                    "metadata": {
+                        "collected_at": "2026-09-01T00:00:00+00:00",
+                        "cursor": None,
+                        "ingestion_run_id": DEMO_RUN_ID,
+                        "name": name,
+                        "owner": owner,
+                        "page_number": 1,
+                        "repository_id": repo_id,
+                        "repository_name_with_owner": repo_full,
+                    },
+                    "node": {
+                        "id": f"PR_{repo_short.upper()}_{pr_num}",
+                        "number": pr_num,
+                        "author": {"__typename": a_type, "login": author},
+                        "createdAt": created_iso,
+                        "closedAt": closed_iso,
+                        "mergedAt": merged_iso,
+                        "state": state,
+                        "isDraft": is_draft,
+                        "additions": adds,
+                        "deletions": dels,
+                        "changedFiles": files,
+                        "reviewDecision": review_dec,
+                    },
+                }
+            )
 
     return records
 
@@ -220,6 +292,7 @@ def main() -> None:
     run_dir.mkdir(parents=True, exist_ok=True)
 
     from collections import defaultdict
+
     by_repo: dict[str, list[dict]] = defaultdict(list)
     for record in synthetic_records:
         key = f"{record['metadata']['owner']}__{record['metadata']['name']}"
@@ -238,6 +311,7 @@ def main() -> None:
     # ── Step 2: Normalize ─────────────────────────────────────────────────
     banner("Step 2 ▸ Normalising raw records → canonical PullRequest models")
     from gain.storage.raw import RawStore
+
     raw_records = RawStore(RAW_DIR).read_run(DEMO_RUN_ID)
     prs, errors = normalize_records(raw_records)
 
@@ -297,10 +371,10 @@ def main() -> None:
         json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8"
     )
 
-    p50_h = summary['p50_seconds'] / 3600
-    p75_h = summary['p75_seconds'] / 3600
-    p90_h = summary['p90_seconds'] / 3600
-    mean_h = summary['mean_seconds'] / 3600
+    p50_h = summary["p50_seconds"] / 3600
+    p75_h = summary["p75_seconds"] / 3600
+    p90_h = summary["p90_seconds"] / 3600
+    mean_h = summary["mean_seconds"] / 3600
     print(f"  p50 (median)     : {summary['p50_seconds']:>10,.0f} s  ({p50_h:>6.1f} h)")
     print(f"  p75              : {summary['p75_seconds']:>10,.0f} s  ({p75_h:>6.1f} h)")
     print(f"  p90              : {summary['p90_seconds']:>10,.0f} s  ({p90_h:>6.1f} h)")

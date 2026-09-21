@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from gain.schema import normalize_records
@@ -10,10 +10,11 @@ def test_normalization() -> None:
     metadata = {
         "repository_name_with_owner": "acme/example",
         "repository_id": "R_1",
-        "collected_at": datetime.now(timezone.utc).isoformat(),
+        "collected_at": datetime.now(UTC).isoformat(),
         "ingestion_run_id": "run-1",
     }
-    records = [{"metadata": metadata, "node": node} for node in fixture["data"]["repository"]["pullRequests"]["nodes"]]
+    raw_nodes = fixture["data"]["repository"]["pullRequests"]["nodes"]
+    records = [{"metadata": metadata, "node": node} for node in raw_nodes]
     prs, errors = normalize_records(records)
     assert len(prs) == 2
     assert not errors

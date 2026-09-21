@@ -42,10 +42,17 @@ class CycleTimeMetric:
         return output
 
     @classmethod
-    def summary(cls, observations: list[CycleTimeObservation]) -> dict[str, float | int | None]:
+    def summary(
+        cls,
+        observations: list[CycleTimeObservation],
+        total_prs: int | None = None,
+    ) -> dict[str, float | int | None]:
         values = sorted(item.cycle_time_seconds for item in observations)
+        merged_count = len(values)
         return {
-            "count": len(values),
+            "count": merged_count,
+            "merged_count": merged_count,
+            "total_evaluated": total_prs if total_prs is not None else merged_count,
             "p50_seconds": _percentile(values, 0.50),
             "p75_seconds": _percentile(values, 0.75),
             "p90_seconds": _percentile(values, 0.90),

@@ -60,9 +60,12 @@ class MonthlyStatsMetric:
         # Build group keys: list of (repo_key, author_key)
         groups: list[tuple[str | None, str | None]] = []
         if by_repo and by_author:
-            combos = sorted(
-                {(p.repository_name_with_owner, p.author_login or "unknown") for p in prs}
-            )
+            combos: list[tuple[str | None, str | None]] = [
+                (r, a)
+                for r, a in sorted(
+                    {(p.repository_name_with_owner, p.author_login or "unknown") for p in prs}
+                )
+            ]
             groups = combos if combos else [(None, None)]
         elif by_repo:
             repos = sorted({p.repository_name_with_owner for p in prs})
@@ -177,14 +180,16 @@ class MonthlyStatsMetric:
         if has_repo:
             cols.append(("Repository", 22, "<"))
 
-        cols.extend([
-            ("Month", 7, "<"),
-            ("Created", 7, ">"),
-            ("Merged", 7, ">"),
-            ("Closed", 7, ">"),
-            ("Unmerged", 8, ">"),
-            ("Merge Rate", 10, ">"),
-        ])
+        cols.extend(
+            [
+                ("Month", 7, "<"),
+                ("Created", 7, ">"),
+                ("Merged", 7, ">"),
+                ("Closed", 7, ">"),
+                ("Unmerged", 8, ">"),
+                ("Merge Rate", 10, ">"),
+            ]
+        )
 
         header = " | ".join(f"{name:{align}{width}}" for name, width, align in cols)
         sep = "-+-".join("-" * width for _, width, _ in cols)
@@ -205,14 +210,16 @@ class MonthlyStatsMetric:
             if has_repo:
                 row_vals.append((s.repository or "all", 22, "<"))
 
-            row_vals.extend([
-                (s.month, 7, "<"),
-                (str(s.created_count), 7, ">"),
-                (str(s.merged_count), 7, ">"),
-                (str(s.closed_count), 7, ">"),
-                (str(s.closed_unmerged_count), 8, ">"),
-                (rate_str, 10, ">"),
-            ])
+            row_vals.extend(
+                [
+                    (s.month, 7, "<"),
+                    (str(s.created_count), 7, ">"),
+                    (str(s.merged_count), 7, ">"),
+                    (str(s.closed_count), 7, ">"),
+                    (str(s.closed_unmerged_count), 8, ">"),
+                    (rate_str, 10, ">"),
+                ]
+            )
             lines.append(" | ".join(f"{val:{align}{width}}" for val, width, align in row_vals))
 
         total_created = sum(s.created_count for s in stats)
@@ -234,13 +241,15 @@ class MonthlyStatsMetric:
                 total_vals.append(("All", 22, "<"))
 
         total_vals.append(("All" if (has_repo or has_author) else "TOTAL", 7, "<"))
-        total_vals.extend([
-            (str(total_created), 7, ">"),
-            (str(total_merged), 7, ">"),
-            (str(total_closed), 7, ">"),
-            (str(total_unmerged), 8, ">"),
-            (total_rate_str, 10, ">"),
-        ])
+        total_vals.extend(
+            [
+                (str(total_created), 7, ">"),
+                (str(total_merged), 7, ">"),
+                (str(total_closed), 7, ">"),
+                (str(total_unmerged), 8, ">"),
+                (total_rate_str, 10, ">"),
+            ]
+        )
 
         lines.append(" | ".join(f"{val:{align}{width}}" for val, width, align in total_vals))
         return "\n".join(lines)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import ValidationError
@@ -33,7 +33,9 @@ def normalize_raw_record(record: dict[str, Any]) -> PullRequest:
     )
 
 
-def normalize_records(records: list[dict[str, Any]]) -> tuple[list[PullRequest], list[dict[str, Any]]]:
+def normalize_records(
+    records: list[dict[str, Any]],
+) -> tuple[list[PullRequest], list[dict[str, Any]]]:
     valid: list[PullRequest] = []
     errors: list[dict[str, Any]] = []
     for index, record in enumerate(records):
@@ -47,8 +49,8 @@ def normalize_records(records: list[dict[str, Any]]) -> tuple[list[PullRequest],
 def _parse_datetime(value: str) -> datetime:
     dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def _parse_nullable_datetime(value: str | None) -> datetime | None:

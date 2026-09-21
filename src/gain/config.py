@@ -21,12 +21,8 @@ class Settings(BaseSettings):
         ),
     )
     github_repos: list[str] | str = Field(default_factory=list)
-    start_at: datetime = Field(
-        default_factory=lambda: datetime(2025, 9, 1, tzinfo=UTC)
-    )
-    end_at: datetime = Field(
-        default_factory=lambda: datetime(2026, 9, 1, tzinfo=UTC)
-    )
+    start_at: datetime = Field(default_factory=lambda: datetime(2025, 9, 1, tzinfo=UTC))
+    end_at: datetime = Field(default_factory=lambda: datetime(2026, 9, 1, tzinfo=UTC))
     output_dir: Path = Path("./data")
     raw_dir: Path = Path("./data/raw")
     canonical_dir: Path = Path("./data/canonical")
@@ -90,6 +86,20 @@ class Settings(BaseSettings):
             raise ConfigurationError("GAIN_JIRA_TOKEN is required for Jira synchronization")
 
 
+_settings_override: Settings | None = None
+
+
+def set_settings_override(settings: Settings | None) -> None:
+    global _settings_override
+    _settings_override = settings
+
+
 @lru_cache(maxsize=1)
-def get_settings() -> Settings:
+def _default_settings() -> Settings:
     return Settings()
+
+
+def get_settings() -> Settings:
+    if _settings_override is not None:
+        return _settings_override
+    return _default_settings()

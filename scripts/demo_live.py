@@ -16,6 +16,7 @@ Usage:
     python scripts/demo_live.py --repo firmsoil/spinnaker
     python scripts/demo_live.py --repo spinnaker/spinnaker --months 1
 """
+
 from __future__ import annotations
 
 import argparse
@@ -214,13 +215,7 @@ def main() -> None:
     mean = summary_raw["mean_seconds"]
 
     print(f"  Sample Size (Merged PRs): {count}")
-    if (
-        count > 0
-        and p50 is not None
-        and p75 is not None
-        and p90 is not None
-        and mean is not None
-    ):
+    if count > 0 and p50 is not None and p75 is not None and p90 is not None and mean is not None:
         p50_h = p50 / 3600
         p75_h = p75 / 3600
         p90_h = p90 / 3600

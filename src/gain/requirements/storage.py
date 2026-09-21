@@ -123,4 +123,3 @@ class SpecificationSeedStore:
         return seeds
 
     find_for_requirement = find_for_story
-

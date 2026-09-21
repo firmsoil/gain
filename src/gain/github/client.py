@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import random
 import time
 from collections.abc import Iterator
 from dataclasses import dataclass
@@ -29,24 +30,29 @@ class GitHubGraphQLClient:
         self,
         token: str,
         api_url: str = "https://api.github.com/graphql",
+        api_version: str = "2022-11-28",
         page_size: int = 50,
         max_retries: int = 4,
         base_backoff_seconds: float = 1.0,
         retry_max_backoff_seconds: float = 30.0,
         timeout_seconds: float = 30.0,
+        jitter: bool = True,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._headers = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/json",
             "Content-Type": "application/json",
+            "X-GitHub-Api-Version": api_version,
         }
         self.api_url = api_url
+        self.api_version = api_version
         self.page_size = page_size
         self.max_retries = max_retries
         self.base_backoff_seconds = base_backoff_seconds
         self.retry_max_backoff_seconds = retry_max_backoff_seconds
         self.timeout_seconds = timeout_seconds
+        self.jitter = jitter
         self.transport = transport
 
     def _request(self, query: str, variables: dict[str, Any]) -> dict[str, Any]:
@@ -112,9 +118,10 @@ class GitHubGraphQLClient:
                     return float(min(wait, self.retry_max_backoff_seconds))
             except ValueError:
                 pass
-        return float(
-            min(self.base_backoff_seconds * (2**attempt), self.retry_max_backoff_seconds)
-        )
+        delay = min(self.base_backoff_seconds * (2**attempt), self.retry_max_backoff_seconds)
+        if self.jitter:
+            delay = delay * (0.5 + random.random() * 0.5)
+        return float(delay)
 
     def iter_pull_request_pages(
         self,

@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from gain.metrics.cycle_time import CycleTimeMetric
 from gain.model.pr import PullRequest
@@ -25,7 +25,7 @@ def pr(node_id: str, number: int, created: str, merged: str | None) -> PullReque
         deletions=1,
         changed_files=1,
         review_decision=None,
-        collected_at=datetime.now(timezone.utc),
+        collected_at=datetime.now(UTC),
         ingestion_run_id="test-run",
     )
 

@@ -7,9 +7,9 @@ test:
 	pytest
 
 lint:
-	ruff check .
+	ruff check src tests
 
 typecheck:
-	mypy src
+	mypy src tests
 
 ci: lint typecheck test

@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime, timezone
+import uuid
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
+import structlog
 import typer
 
 from gain.config import Settings, get_settings
@@ -37,6 +40,8 @@ from gain.sync import PullRequestBackfill
 app = typer.Typer(help="GAIN — GitHub AI Intelligence Network")
 requirements_app = typer.Typer(help="Human-governed requirements → Jira → SDD operations.")
 app.add_typer(requirements_app, name="requirements")
+agent_app = typer.Typer(help="Engineering Intelligence Agent operations.")
+app.add_typer(agent_app, name="agent")
 
 
 def _build_client(settings: Settings) -> GitHubGraphQLClient:
@@ -101,7 +106,9 @@ def backfill() -> None:
     settings = get_settings()
     settings.validate_runtime()
     settings.ensure_directories()
-    result = PullRequestBackfill(settings, _build_client(settings)).run()
+    run_id = str(uuid.uuid4())
+    structlog.contextvars.bind_contextvars(run_id=run_id)
+    result = PullRequestBackfill(settings, _build_client(settings)).run(ingestion_run_id=run_id)
     typer.echo(json.dumps(result, indent=2, sort_keys=True))
 
 
@@ -111,6 +118,7 @@ def normalize(
 ) -> None:
     """Normalize a raw ingestion run into the canonical PR dataset."""
     configure_logging()
+    structlog.contextvars.bind_contextvars(run_id=run_id)
     settings = get_settings()
     settings.ensure_directories()
     raw_records = RawStore(settings.raw_dir).read_run(run_id)
@@ -148,15 +156,15 @@ def compute(
     observations = CycleTimeMetric.observations(prs)
     output_path = settings.metrics_dir / "gain-pr-001-cycle-time.parquet"
     write_cycle_time_observations(observations, output_path)
-    summary = CycleTimeMetric.summary(observations)
-    summary["metric_id"] = CycleTimeMetric.metric_id
-    summary["metric_version"] = CycleTimeMetric.metric_version
-    summary["generated_at"] = datetime.now(timezone.utc).isoformat()
+    summary_data: dict[str, Any] = dict(CycleTimeMetric.summary(observations))
+    summary_data["metric_id"] = CycleTimeMetric.metric_id
+    summary_data["metric_version"] = CycleTimeMetric.metric_version
+    summary_data["generated_at"] = datetime.now(UTC).isoformat()
     summary_path = settings.metrics_dir / "gain-pr-001-cycle-time-summary.json"
     summary_path.write_text(
-        json.dumps(summary, indent=2, sort_keys=True, default=str), encoding="utf-8"
+        json.dumps(summary_data, indent=2, sort_keys=True, default=str), encoding="utf-8"
     )
-    typer.echo(json.dumps(summary, indent=2, sort_keys=True, default=str))
+    typer.echo(json.dumps(summary_data, indent=2, sort_keys=True, default=str))
 
 
 @app.command("monthly-stats")
@@ -469,7 +477,6 @@ def show_traceability(story_id: str = typer.Option(...)) -> None:
             sort_keys=True,
             default=str,
         )
-
     )
 
 
@@ -488,6 +495,340 @@ def link_specification(
         actor=actor,
     )
     typer.echo(json.dumps(story.model_dump(mode="json"), indent=2, sort_keys=True))
+
+
+@app.command("mcp")
+def serve_mcp(
+    transport: str = typer.Option(
+        "stdio",
+        "--transport",
+        "-t",
+        help="MCP transport protocol: 'stdio' (local/dev) or 'streamable-http' (production ASGI).",
+    ),
+    host: str = typer.Option(
+        "127.0.0.1",
+        "--host",
+        "-h",
+        help="Host interface for Streamable HTTP transport.",
+    ),
+    port: int = typer.Option(
+        8000,
+        "--port",
+        "-p",
+        help="Port for Streamable HTTP transport.",
+    ),
+    path: str = typer.Option(
+        "/mcp",
+        "--path",
+        help="Streamable HTTP endpoint path.",
+    ),
+) -> None:
+    """Run the GAIN Model Context Protocol (MCP) Server."""
+    from gain.mcp.server.app import create_mcp_server
+    from gain.mcp.transports.http import run_streamable_http
+    from gain.mcp.transports.stdio import run_stdio
+
+    server = create_mcp_server()
+
+    if transport == "stdio":
+        typer.echo("Starting GAIN MCP Server over stdio transport...", err=True)
+        run_stdio(server)
+    elif transport in ("streamable-http", "http"):
+        typer.echo(
+            f"Starting GAIN MCP Server over Streamable HTTP on http://{host}:{port}{path}...",
+            err=True,
+        )
+        run_streamable_http(server, host=host, port=port, streamable_http_path=path)
+    else:
+        raise typer.BadParameter(
+            f"Unsupported transport '{transport}'. Choose 'stdio' or 'streamable-http'."
+        )
+
+
+@agent_app.command("ask")
+def agent_ask(
+    query: str = typer.Argument(
+        ..., help="Natural-language question to ask the Engineering Intelligence Agent."
+    ),
+    repo: str = typer.Option(
+        "firmsoil/gain", "--repo", "-r", help="Target repository name with owner."
+    ),
+) -> None:
+    """Ask an engineering intelligence question with policy guard and evidence verification."""
+    import asyncio
+
+    from gain.agent.orchestrator import EngineeringIntelligenceAgent
+
+    agent = EngineeringIntelligenceAgent()
+    resp = asyncio.run(agent.investigate(query=query, default_repo=repo))
+    typer.echo(resp.summary)
+
+
+@agent_app.command("investigate")
+def agent_investigate(
+    query: str = typer.Argument(..., help="Engineering question or hypothesis to investigate."),
+    repo: str = typer.Option(
+        "firmsoil/gain", "--repo", "-r", help="Target repository name with owner."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output full structured JSON report."),
+) -> None:
+    """Run an end-to-end multi-step engineering investigation and build an evidence package."""
+    import asyncio
+
+    from gain.agent.orchestrator import EngineeringIntelligenceAgent
+
+    agent = EngineeringIntelligenceAgent()
+    resp = asyncio.run(agent.investigate(query=query, default_repo=repo))
+
+    if json_output:
+        typer.echo(json.dumps(resp.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(resp.summary)
+        typer.echo("")
+        typer.echo(f"Evidence Package: {resp.evidence_package_id}")
+        typer.echo(f"Investigation ID: {resp.investigation_id}")
+        typer.echo(f"Total Classified Claims: {len(resp.claims)}")
+
+
+@app.command("ai-impact")
+def cli_ai_impact(
+    repo: str = typer.Option(
+        "firmsoil/gain", "--repo", "-r", help="Target repository name with owner."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output raw JSON payload."),
+) -> None:
+    """Evaluate AI developer tooling impact across delivery flow cohorts."""
+    from gain.services.ai_impact import AIImpactService
+
+    configure_logging()
+    svc = AIImpactService()
+    res = svc.analyze_impact(repository=repo)
+    if json_output:
+        typer.echo(json.dumps(res.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(f"AI Impact Status: {res.status} ({res.classification})")
+        for f in res.findings:
+            typer.echo(f"- {f}")
+        for lim in res.limitations:
+            typer.echo(f"  * Limitation: {lim}")
+
+
+@app.command("ai-roi")
+def cli_ai_roi(
+    population: str = typer.Option(
+        "firmsoil/gain", "--population", "-p", help="Target population/repository."
+    ),
+    devs: int = typer.Option(25, "--devs", "-d", help="Number of active developers."),
+    hourly_rate: float = typer.Option(
+        85.0, "--hourly-rate", help="Developer hourly cost rate ($/hr)."
+    ),
+    seat_cost: float = typer.Option(
+        19.0, "--seat-cost", help="Monthly license cost per seat ($/mo)."
+    ),
+    json_output: bool = typer.Option(False, "--json", help="Output raw JSON scenario payload."),
+) -> None:
+    """Calculate deterministic AI tooling economic ROI and sensitivity scenarios."""
+    from gain.services.ai_roi import AIROIService
+
+    configure_logging()
+    svc = AIROIService()
+    res = svc.calculate_roi_scenario(
+        population=population,
+        developer_count=devs,
+        hourly_rate=hourly_rate,
+        monthly_license_cost=seat_cost,
+    )
+    if json_output:
+        typer.echo(json.dumps(res.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(f"Modeled AI Tooling ROI: {res.roi_percentage:.1f}%")
+        typer.echo(f"Net Economic Benefit: ${res.net_benefit:,.2f}")
+        typer.echo(f"Annual Tool Investment: ${res.investment_cost:,.2f}")
+        min_roi = res.uncertainty_range.get("min_roi_percentage", 0.0)
+        max_roi = res.uncertainty_range.get("max_roi_percentage", 0.0)
+        typer.echo(f"Sensitivity Uncertainty: {min_roi:.1f}% to {max_roi:.1f}%")
+
+
+@app.command("ingest-jira")
+def cli_ingest_jira(
+    file_path: str = typer.Argument(..., help="Path to JSON file containing Jira issues."),
+    project: str = typer.Option("default", "--project", "-p", help="Jira project key."),
+    json_output: bool = typer.Option(False, "--json", help="Output summary as JSON."),
+) -> None:
+    """Ingest Jira issues through enterprise source adapter into canonical storage."""
+    from pathlib import Path
+
+    from gain.adapters.jira import JiraSourceAdapter
+
+    configure_logging()
+    path = Path(file_path)
+    if not path.exists():
+        typer.echo(f"Error: file not found: {file_path}", err=True)
+        raise typer.Exit(1)
+
+    with open(path, encoding="utf-8") as f:
+        payloads = json.load(f)
+    if not isinstance(payloads, list):
+        payloads = [payloads]
+
+    adapter = JiraSourceAdapter()
+    result = adapter.ingest_payloads(payloads, partition_key=project)
+    if json_output:
+        typer.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(
+            f"Jira Ingestion Complete: {result.canonical_records_count} issues canonicalized"
+        )
+        typer.echo(f"Quarantined Errors: {result.errors_count}")
+        typer.echo(f"Canonical Storage: {result.canonical_file_path}")
+
+
+@app.command("ingest-linear")
+def cli_ingest_linear(
+    file_path: str = typer.Argument(..., help="Path to JSON file containing Linear issues."),
+    team: str = typer.Option("default", "--team", "-t", help="Linear team key."),
+    json_output: bool = typer.Option(False, "--json", help="Output summary as JSON."),
+) -> None:
+    """Ingest Linear issues through enterprise source adapter into canonical storage."""
+    from pathlib import Path
+
+    from gain.adapters.linear import LinearSourceAdapter
+
+    configure_logging()
+    path = Path(file_path)
+    if not path.exists():
+        typer.echo(f"Error: file not found: {file_path}", err=True)
+        raise typer.Exit(1)
+
+    with open(path, encoding="utf-8") as f:
+        payloads = json.load(f)
+    if not isinstance(payloads, list):
+        payloads = [payloads]
+
+    adapter = LinearSourceAdapter()
+    result = adapter.ingest_payloads(payloads, partition_key=team)
+    if json_output:
+        typer.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(
+            f"Linear Ingestion Complete: {result.canonical_records_count} issues canonicalized"
+        )
+        typer.echo(f"Quarantined Errors: {result.errors_count}")
+
+
+@app.command("ingest-deployments")
+def cli_ingest_deployments(
+    file_path: str = typer.Argument(..., help="Path to JSON file containing deployment events."),
+    repo: str = typer.Option("firmsoil/gain", "--repo", "-r", help="Repository identifier."),
+    json_output: bool = typer.Option(False, "--json", help="Output summary as JSON."),
+) -> None:
+    """Ingest CI/CD deployment events into canonical storage."""
+    from pathlib import Path
+
+    from gain.adapters.deployments import DeploymentSourceAdapter
+
+    configure_logging()
+    path = Path(file_path)
+    if not path.exists():
+        typer.echo(f"Error: file not found: {file_path}", err=True)
+        raise typer.Exit(1)
+
+    with open(path, encoding="utf-8") as f:
+        payloads = json.load(f)
+    if not isinstance(payloads, list):
+        payloads = [payloads]
+
+    adapter = DeploymentSourceAdapter()
+    result = adapter.ingest_payloads(payloads, partition_key=repo.replace("/", "__"))
+    if json_output:
+        typer.echo(json.dumps(result.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(
+            f"Deployment Ingestion Complete: {result.canonical_records_count} "
+            "deployments canonicalized"
+        )
+        typer.echo(f"Quarantined Errors: {result.errors_count}")
+
+
+@app.command("dora")
+def cli_dora(
+    repo: str = typer.Option("firmsoil/gain", "--repo", "-r", help="Repository identifier."),
+    env: str = typer.Option("production", "--env", "-e", help="Environment target."),
+    json_output: bool = typer.Option(False, "--json", help="Output raw JSON payload."),
+) -> None:
+    """Calculate deterministic DORA metrics from canonical deployment telemetry."""
+    from gain.services.dora import DORAService
+
+    configure_logging()
+    svc = DORAService()
+    res = svc.calculate_dora(repository=repo, environment=env)
+    if json_output:
+        typer.echo(json.dumps(res.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(f"DORA Status: {res.status}")
+        if res.status == "available":
+            typer.echo(
+                f"Deployment Frequency: {res.deployment_frequency.value} "
+                f"{res.deployment_frequency.unit}"
+            )
+            typer.echo(f"Change Failure Rate: {res.change_fail_rate.value}%")
+            if res.change_lead_time.value is not None:
+                typer.echo(f"Lead Time for Changes: {res.change_lead_time.value}s")
+        else:
+            for dep in res.missing_dependencies:
+                typer.echo(f"- Missing: {dep}")
+
+
+@app.command("issues")
+def cli_issues(
+    project: str | None = typer.Option(None, "--project", "-p", help="Project key filter."),
+    repo: str | None = typer.Option(None, "--repo", "-r", help="Repository filter."),
+    json_output: bool = typer.Option(False, "--json", help="Output raw JSON payload."),
+) -> None:
+    """Analyze canonical work item velocity, cycle times, and PR traceability."""
+    from gain.services.issue_analytics import IssueAnalyticsService
+
+    configure_logging()
+    svc = IssueAnalyticsService()
+    res = svc.analyze_issues(project_key=project, repository=repo)
+    if json_output:
+        typer.echo(json.dumps(res.model_dump(mode="json"), indent=2))
+    else:
+        typer.echo(f"Issue Analytics Status: {res.status} ({res.classification})")
+        typer.echo(f"Total Issues: {res.total_issues} ({res.resolved_issues} resolved)")
+        typer.echo(f"Traceability Rate: {res.traceability_rate}%")
+        for f in res.findings:
+            typer.echo(f"- {f}")
+
+
+@app.command("demo")
+def cli_demo(
+    data_dir: Path | None = typer.Option(
+        None,
+        "--data-dir",
+        "-d",
+        help="Optional destination root directory for synthetic demo data.",
+    ),
+) -> None:
+    """Run an end-to-end interactive demo across all GAIN capabilities using synthetic telemetry."""
+    import importlib.util
+    import sys
+
+    scripts_dir = Path(__file__).resolve().parent.parent.parent / "scripts"
+    demo_path = scripts_dir / "demo_gain_platform.py"
+    if not demo_path.is_file():
+        typer.echo(f"Error: Demo script not found at {demo_path}", err=True)
+        raise typer.Exit(code=1)
+
+    spec = importlib.util.spec_from_file_location("demo_gain_platform", demo_path)
+    if spec is None or spec.loader is None:
+        typer.echo("Error: Unable to load demo script", err=True)
+        raise typer.Exit(code=1)
+
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["demo_gain_platform"] = module
+    spec.loader.exec_module(module)
+    module.run_demo(data_root=data_dir)
 
 
 if __name__ == "__main__":

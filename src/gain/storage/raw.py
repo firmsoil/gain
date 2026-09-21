@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -26,7 +26,7 @@ class RawStore:
         run_dir = self.root / ingestion_run_id
         run_dir.mkdir(parents=True, exist_ok=True)
         path = run_dir / f"{owner}__{name}__page-{page_number:05d}.jsonl"
-        collected_at = datetime.now(timezone.utc).isoformat()
+        collected_at = datetime.now(UTC).isoformat()
         metadata = {
             "ingestion_run_id": ingestion_run_id,
             "owner": owner,

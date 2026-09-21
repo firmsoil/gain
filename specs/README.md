@@ -4,7 +4,7 @@ Welcome to the **GAIN (GitHub AI Intelligence Network)** specifications reposito
 
 This document serves as the operational handbook for **Product Managers (PMs)** and **Software / Data Engineers** collaborating on GAIN. It provides a comprehensive map of all specifications, explains how to navigate and maintain them, and details actionable workflows for extending the system.
 
-The GitHub PR analytics package (`specs/001-gain-pr-analytics/`) provides the data pipeline and metrics SDD baseline. The upstream requirements engineering package ([`specs/002-requirements-jira-sdd/`](002-requirements-jira-sdd/README.md)) establishes the **GAIN Canonical Requirement** as the authoritative internal domain model independent of external issue trackers. Jira is modeled strictly as an external adapter and projection target, enabling pure Git/SDD workflows to operate with zero Jira dependency while supporting deterministic bidirectional Jira synchronization when desired.
+The GitHub PR analytics package (`specs/001-gain-pr-analytics/`) provides the data pipeline and metrics SDD baseline. The upstream Requirements Engineering package ([`specs/002-requirements-jira-sdd/`](002-requirements-jira-sdd/README.md)) establishes the **GAIN Canonical Requirement** as the authoritative internal domain model independent of external issue trackers. Jira is modeled strictly as an external adapter and projection target, enabling pure Git/SDD workflows to operate with zero Jira dependency while supporting deterministic bidirectional Jira synchronization when desired.
 
 
 ---

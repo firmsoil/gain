@@ -110,7 +110,6 @@ class GeneratedRequirementDraft(BaseModel):
     """The provider contract. Pure requirements semantics; external identity is never
     provider supplied."""
 
-
     model_config = ConfigDict(extra="forbid")
 
     summary: str = ""
@@ -170,7 +169,6 @@ class GeneratedRequirementDraft(BaseModel):
                     custom.pop(field, None)
         data["custom_fields"] = custom
         return data
-
 
     @property
     def issue_type(self) -> RequirementType:
@@ -308,7 +306,6 @@ class CanonicalRequirement(GeneratedRequirementDraft):
             data["external_references"] = references
 
         return data
-
 
     @property
     def story_id(self) -> str:
@@ -476,5 +473,3 @@ class RequirementEvent(BaseModel):
             data["requirement_version"] = req_ver
             data["story_version"] = req_ver
         return data
-
-

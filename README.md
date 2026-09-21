@@ -15,18 +15,25 @@ GitHub GraphQL API
 
 The implementation deliberately treats `createdAt -> mergedAt` as **observable PR lifecycle elapsed time**, not developer coding time.
 
-## Architecture
+## Architecture & Platform Design
 
+The complete system architecture is documented in:
+* **Architecture Specification**: [`docs/OVERALL_ARCHITECTURE.md`](docs/OVERALL_ARCHITECTURE.md)
+* **Interactive Architecture Diagram**: [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html)
+* **Reference Architecture**: [`docs/REFERENCE_ARCHITECTURE.md`](docs/REFERENCE_ARCHITECTURE.md)
+
+### Core Subsystems
+
+- `gain.adapters` — enterprise source adapters (Jira, Linear, CI/CD deployments).
 - `gain.github.client` — GraphQL transport, retries, rate-limit handling, pagination.
-- `gain.github.queries` — version-controlled GraphQL query definitions.
 - `gain.sync` — backfill orchestration and checkpoints.
-- `gain.storage.raw` — replayable raw payloads and provenance.
-- `gain.model` — canonical domain models.
-- `gain.metrics` — versioned metric registry/calculations.
-- `gain.storage.analytics` — Parquet outputs.
+- `gain.storage.raw` — replayable raw payloads and provenance metadata (`RawStore`).
+- `gain.model` — transport-independent canonical domain models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalCommit`, `AiDeveloperTelemetry`).
+- `gain.metrics` & `gain.services` — deterministic zero-LLM analytics engines (PR Cycle Time, Monthly Flow, AI Impact, 4-Stage AI ROI, DORA, Issue Velocity).
+- `gain.mcp` — governed Model Context Protocol (MCP) server over SSE and Stdio.
+- `gain.agent` — autonomous Engineering Intelligence Agent with 7-tier claim classification.
 - `gain.quality` — canonical data-quality validation.
-- `gain.cli` — operator interface.
-- `gain.requirements` — human-governed business context, AI story drafts, Jira mapping, and SDD seeds.
+- `gain.cli` — unified operator CLI (`gain demo`, `gain backfill`, `gain dora`, `gain issues`, `gain agent`, `gain mcp`).
 
 ## Requirements → Jira → SDD
 
@@ -129,14 +136,118 @@ gain monthly-stats --canonical-path data/canonical/pull_requests__<run_id>.parqu
 
 ```bash
 pytest
-ruff check .
-mypy src
+ruff check src tests
+mypy src tests
 ```
 
-## Spec-driven source of truth
+## GAIN Model Context Protocol (MCP) Server
 
-The SDD artifacts from the implementation package are retained under `specs/` and `docs/`. The implementation should be evaluated against those artifacts using the current Spec Kit workflow: constitution -> specify -> clarify -> plan -> checklist -> tasks -> analyze -> implement -> converge. GitHub documents cursor-based pagination and connection page sizes of up to 100 items, which the collector handles explicitly. See the GitHub GraphQL pagination documentation.
+Phase 6 introduces the production-quality **GAIN MCP Server** (`src/gain/mcp`), exposing GAIN's trusted analytical capabilities to external AI agents and orchestrators through the official Model Context Protocol (SDK v2, protocol `2026-07-28`).
+
+### Core Architectural Principle
+
+GAIN MCP is strictly an **interface/access layer** over GAIN domain services. It is **NOT** a data plane, ingestion pipeline, generic SQL executor, GitHub API proxy, or LLM reasoning engine.
+
+```text
+            External AI Agents
+                   │
+                   ▼
+             GAIN MCP Server (Interface Boundary)
+                   │
+                   ▼
+          GAIN Domain Services
+                   │
+    ┌──────────────┼──────────────┐
+    ▼              ▼              ▼
+ Metrics        Evidence       Lineage
+    │              │              │
+    └──────────────┼──────────────┘
+                   │
+                   ▼
+            GAIN Data Product
+```
+
+### Supported Transports
+
+1. **Local CLI / Development (`stdio`)**:
+   ```bash
+   gain mcp --transport stdio
+   ```
+2. **Production Service (`Streamable HTTP`)**:
+   ```bash
+   gain mcp --transport streamable-http --host 127.0.0.1 --port 8000 --path /mcp
+   ```
+3. **MCP Inspector Interactive Validation**:
+   ```bash
+   .venv/bin/mcp dev src/gain/mcp/server/app.py:server
+   ```
+
+### Domain Tool Catalog (12 Tools)
+
+| Tool Name | Scope Required | Description |
+| :--- | :--- | :--- |
+| `get_dora_metrics` | `gain:metrics:read` | Evaluates DORA metrics; returns explicit data gap requirements for missing deployment telemetry. |
+| `query_engineering_metrics` | `gain:metrics:read` | Deterministically executes approved metrics (`pr_cycle_time`, `monthly_pr_flow_summary`). |
+| `compare_cohorts` | `gain:metrics:read` | Computes statistical deltas across repository or team cohorts. |
+| `analyze_ai_impact` | `gain:metrics:read` | Governed AI impact taxonomy (Observed vs Derived vs Modeled); reports insufficient data safely. |
+| `calculate_ai_roi` | `gain:metrics:read` | Modeled economic scenario analysis with explicit cost and sensitivity assumptions. |
+| `explain_metric` | `gain:metrics:read` | Retrieves authoritative metric definition and formula from Metric Catalog. |
+| `get_metric_lineage` | `gain:metrics:read` | Traverses end-to-end lineage from observation to canonical PR and raw JSONL payload. |
+| `get_evidence` | `gain:evidence:read` | Retrieves structured, auditable evidence packages by ID. |
+| `start_investigation` | `gain:investigation:write` | Creates durable, application-owned investigation records independent of MCP session state. |
+| `get_investigation` | `gain:investigation:read` | Retrieves investigation status with strict tenant isolation. |
+| `get_data_quality` | `gain:quality:read` | Reports freshness, completeness, validity scores, and data quality flags. |
+| `get_canonical_entity` | `gain:entity:read` | Retrieves canonical `PullRequest` representation by authorized identifier. |
+
+### Addressable MCP Resources
+
+- `gain://metric-definitions/{metric_id}/{version}` — Metric definition from catalog.
+- `gain://metrics/{metric_id}` — Current summary distribution for a metric.
+- `gain://cohorts/{cohort_id}` — Cohort summary.
+- `gain://evidence/{evidence_id}` — Structured evidence package.
+- `gain://investigations/{investigation_id}` — Durable investigation state.
+- `gain://lineage/{target_id}` — Provenance and data pipeline trace.
+- `gain://data-quality/{dataset_id}` — Dataset health, freshness, and validity.
+- `gain://contracts/{contract_id}` — Public metric and interface contracts.
+
+### Methodological MCP Prompts
+
+- `dora-executive-brief` — Executive briefing on DORA engineering metrics and delivery flow.
+- `dora-investigation` — Investigation into delivery lead time and deployment anomalies.
+- `ai-impact-investigation` — Framework for evaluating engineering differences across cohorts.
+- `ai-roi-analysis` — Economic ROI scenario analysis with explicit assumptions.
+- `metric-change-investigation` — Root-cause inquiry into sudden metric shifts.
+- `repository-engineering-investigation` — Holistic repository engineering flow analysis.
+- `evidence-review` — Claim integrity review and evidence package audit.
+- `engineering-health-briefing` — Cross-repository flow and health synthesis.
+
+### Python Client Integration Example (MCP SDK v2)
+
+```python
+import anyio
+from mcp.client.session import ClientSession
+from mcp.client.streamable_http import streamable_http_client
+
+async def query_gain_mcp() -> None:
+    async with streamable_http_client("http://127.0.0.1:8000/mcp") as (read_stream, write_stream):
+        async with ClientSession(read_stream, write_stream) as session:
+            await session.initialize()
+            
+            # 1. Discover tools
+            tools = await session.list_tools()
+            print(f"Available tools: {[t.name for t in tools.tools]}")
+            
+            # 2. Query PR cycle time
+            result = await session.call_tool(
+                "query_engineering_metrics",
+                {"metric_name": "pr_cycle_time", "repository": "firmsoil/gain"}
+            )
+            print("Cycle Time Result:", result.structured_content)
+
+anyio.run(query_gain_mcp)
+```
 
 ## Security
 
-Do not place GitHub tokens in source code or command-line history. The CLI reads `GITHUB_TOKEN` from the environment. Tokens are never logged.
+Do not place GitHub tokens in source code or command-line history. The CLI reads `GITHUB_TOKEN` from the environment. Tokens and secrets are redacted from logs automatically via `gain.logging.mask_secrets`. MCP requests enforce fine-grained policy authorization and tenant isolation before data access.
+
