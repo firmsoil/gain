@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -231,8 +232,9 @@ async def test_coordinator_failure_handling_and_retry(tmp_path: Path) -> None:
 def test_cli_gain_sync_help() -> None:
     result = runner.invoke(app, ["sync", "--help"])
     assert result.exit_code == 0
-    assert "--workers" in result.stdout
-    assert "-w" in result.stdout
-    assert "--batch-size" in result.stdout
-    assert "-b" in result.stdout
-    assert "--tier" in result.stdout
+    clean_stdout = re.sub(r"\x1b\[[0-9;]*[a-zA-Z]", "", result.stdout)
+    assert "--workers" in clean_stdout
+    assert "-w" in clean_stdout
+    assert "--batch-size" in clean_stdout
+    assert "-b" in clean_stdout
+    assert "--tier" in clean_stdout
