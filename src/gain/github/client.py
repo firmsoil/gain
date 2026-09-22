@@ -12,6 +12,7 @@ import structlog
 
 from gain.errors import GitHubApiError, IncompletePaginationError, RateLimitError
 from gain.github.queries import PR_BACKFILL_QUERY
+from gain.util import parse_utc_datetime
 
 log = structlog.get_logger(__name__)
 
@@ -161,7 +162,7 @@ class GitHubGraphQLClient:
             # The connection is ordered newest-first. Once the oldest record on a page
             # predates the requested lower bound, no later page can contain an in-window PR.
             created_times = [
-                datetime.fromisoformat(str(node["createdAt"]).replace("Z", "+00:00"))
+                parse_utc_datetime(str(node["createdAt"]))
                 for node in page.nodes
                 if node.get("createdAt")
             ]

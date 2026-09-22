@@ -3,16 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+
+import polars as pl
+import structlog
 
 from gain.config import Settings, get_settings
 from gain.metrics.catalog import MetricCatalog
 from gain.metrics.cycle_time import CycleTimeMetric
 from gain.metrics.monthly_stats import MonthlyPRStats, MonthlyStatsMetric
 from gain.model.pr import PullRequest
-from gain.storage.analytics import read_canonical
+from gain.storage.analytics import read_canonical, scan_canonical
+
+log = structlog.get_logger(__name__)
 
 
 @dataclass(frozen=True)
@@ -83,46 +88,101 @@ class MetricService:
             return [p for p in all_prs if p.repository_name_with_owner == repository]
         return all_prs
 
+    def _scan_canonical_prs(self, repository: str | None = None) -> pl.LazyFrame:
+        """Scan canonical PR dataset returning a LazyFrame with repository filter pushed down."""
+        lf = scan_canonical(self.settings.canonical_dir, entity_type="pull_request")
+        if repository:
+            lf = lf.filter(pl.col("repository_name_with_owner") == repository)
+        return lf
+
     def query_pr_cycle_time(
         self,
         repository: str | None = None,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
     ) -> MetricSummaryResult:
-        prs = self._load_canonical_prs(repository=repository)
+        lf = self._scan_canonical_prs(repository=repository)
         if start_date:
-            prs = [p for p in prs if p.created_at >= start_date]
+            start_utc = (
+                start_date if start_date.tzinfo is not None else start_date.replace(tzinfo=UTC)
+            )
+            lf = lf.filter(pl.col("created_at") >= start_utc)
         if end_date:
-            prs = [p for p in prs if p.created_at <= end_date]
+            end_utc = end_date if end_date.tzinfo is not None else end_date.replace(tzinfo=UTC)
+            lf = lf.filter(pl.col("created_at") <= end_utc)
 
-        observations = CycleTimeMetric.observations(prs)
-        summary = CycleTimeMetric.summary(observations, total_prs=len(prs))
+        # 1. Total evaluated count and freshness across all matching PRs
+        meta_df = lf.select(
+            [
+                pl.len().alias("total_evaluated"),
+                pl.col("collected_at").max().alias("latest_collected"),
+            ]
+        ).collect()
+        total_evaluated = int(meta_df["total_evaluated"][0]) if len(meta_df) > 0 else 0
+        latest_raw = meta_df["latest_collected"][0] if len(meta_df) > 0 else None
+        data_freshness_utc: str | None = latest_raw.isoformat() if latest_raw is not None else None
 
-        sample = [
-            {
-                "pr_number": o.pr_number,
-                "node_id": o.github_node_id,
-                "repository": o.repository_name_with_owner,
-                "cycle_time_seconds": o.cycle_time_seconds,
-            }
-            for o in observations[:10]
-        ]
+        # 2. Cycle time in seconds for merged PRs with valid duration
+        cycle_time_expr = (
+            pl.col("merged_at") - pl.col("created_at")
+        ).dt.total_microseconds() / 1_000_000.0
+        merged_lf = (
+            lf.filter(pl.col("merged_at").is_not_null())
+            .with_columns(cycle_time_expr.alias("cycle_time_seconds"))
+            .filter(pl.col("cycle_time_seconds") >= 0.0)
+        )
 
-        latest_collected: datetime | None = None
-        for p in prs:
-            if latest_collected is None or p.collected_at > latest_collected:
-                latest_collected = p.collected_at
+        # 3. Aggregation summary statistics via Polars
+        ct_col = pl.col("cycle_time_seconds")
+        stats_df = merged_lf.select(
+            [
+                pl.len().alias("merged_count"),
+                ct_col.quantile(0.50, interpolation="linear").alias("p50_seconds"),
+                ct_col.quantile(0.75, interpolation="linear").alias("p75_seconds"),
+                ct_col.quantile(0.90, interpolation="linear").alias("p90_seconds"),
+                ct_col.quantile(0.95, interpolation="linear").alias("p95_seconds"),
+                ct_col.mean().alias("mean_seconds"),
+            ]
+        ).collect()
+
+        merged_count = int(stats_df["merged_count"][0]) if len(stats_df) > 0 else 0
+
+        summary: dict[str, float | int | None] = {
+            "count": merged_count,
+            "merged_count": merged_count,
+            "total_evaluated": total_evaluated,
+            "p50_seconds": stats_df["p50_seconds"][0] if merged_count > 0 else None,
+            "p75_seconds": stats_df["p75_seconds"][0] if merged_count > 0 else None,
+            "p90_seconds": stats_df["p90_seconds"][0] if merged_count > 0 else None,
+            "p95_seconds": stats_df["p95_seconds"][0] if merged_count > 0 else None,
+            "mean_seconds": stats_df["mean_seconds"][0] if merged_count > 0 else None,
+        }
+
+        # 4. First 10 observations sample
+        sample_df = (
+            merged_lf.select(
+                [
+                    pl.col("number").alias("pr_number"),
+                    pl.col("github_node_id").alias("node_id"),
+                    pl.col("repository_name_with_owner").alias("repository"),
+                    pl.col("cycle_time_seconds"),
+                ]
+            )
+            .limit(10)
+            .collect()
+        )
+        sample = sample_df.to_dicts()
 
         return MetricSummaryResult(
             metric_id=CycleTimeMetric.metric_id,
             metric_version=CycleTimeMetric.metric_version,
             metric_name="pr_cycle_time",
             repository=repository,
-            total_evaluated=len(prs),
-            merged_count=len(observations),
+            total_evaluated=total_evaluated,
+            merged_count=merged_count,
             summary_stats=summary,
             observations_sample=sample,
-            data_freshness_utc=latest_collected.isoformat() if latest_collected else None,
+            data_freshness_utc=data_freshness_utc,
         )
 
     def query_monthly_stats(

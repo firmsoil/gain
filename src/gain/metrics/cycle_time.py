@@ -24,9 +24,9 @@ class CycleTimeMetric:
     def observations(cls, prs: list[PullRequest]) -> list[CycleTimeObservation]:
         output: list[CycleTimeObservation] = []
         for pr in prs:
-            seconds = pr.cycle_time_seconds()
-            if seconds is None:
+            if pr.merged_at is None:
                 continue
+            seconds = (pr.merged_at - pr.created_at).total_seconds()
             if seconds < 0:
                 continue
             output.append(

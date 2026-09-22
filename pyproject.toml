@@ -36,7 +36,7 @@ packages = ["src/gain"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -p anyio"
 
 [tool.ruff]
 target-version = "py312"
@@ -48,6 +48,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/gain/cli.py" = ["B008"]
+"src/gain/cli/*.py" = ["B008"]
 
 [tool.mypy]
 python_version = "3.12"

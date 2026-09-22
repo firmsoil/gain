@@ -1,0 +1,66 @@
+groups:
+  - name: gain-operational-alerts
+    rules:
+      - alert: GainMcpAvailabilityDrop
+        expr: |
+          (
+            sum(rate(gain_mcp_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(gain_mcp_requests_total[5m]))
+          ) > 0.001
+        for: 5m
+        labels:
+          severity: critical
+          tier: platform
+        annotations:
+          summary: "GAIN MCP Server availability dropped below 99.9% SLO"
+          description: "Over the last 5 minutes, 5xx server errors accounted for > 0.1% of all MCP requests."
+          runbook_url: "docs/operations/SLOS.md#runbook-2-mcp-server-latency-degradation"
+
+      - alert: GainMcpHighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(gain_mcp_request_duration_seconds_bucket[5m])) by (le)) > 2.0
+        for: 10m
+        labels:
+          severity: warning
+          tier: platform
+        annotations:
+          summary: "GAIN MCP p95 query latency exceeded 2.0s SLO target"
+          description: "p95 latency is currently {{ $value | humanizeDuration }} (SLO threshold: 2.0s)."
+          runbook_url: "docs/operations/SLOS.md#runbook-2-mcp-server-latency-degradation"
+
+      - alert: GainRateLimitExhaustion
+        expr: |
+          gain_github_rate_limit_remaining < 500
+        for: 2m
+        labels:
+          severity: critical
+          tier: ingestion
+        annotations:
+          summary: "GitHub API rate limit points dangerously low (< 500)"
+          description: "Managed token {{ $labels.token_id }} has only {{ $value }} points remaining before complete throttling."
+          runbook_url: "docs/operations/SLOS.md#runbook-1-github-api-rate-limit-exhaustion"
+
+      - alert: GainSyncLagExceeded
+        expr: |
+          time() - max(gain_ingestion_last_successful_sync_timestamp) by (tier) > 7200
+        for: 15m
+        labels:
+          severity: warning
+          tier: ingestion
+        annotations:
+          summary: "GAIN ingestion freshness lag exceeded 2 hours for critical tier"
+          description: "Repository tier {{ $labels.tier }} has not completed a sync cycle in over 2 hours."
+          runbook_url: "docs/operations/SLOS.md#runbook-3-ingestion-lag-exceeded"
+
+      - alert: GainHighIngestionErrorRate
+        expr: |
+          sum(rate(gain_ingestion_failures_total[10m])) > 5
+        for: 5m
+        labels:
+          severity: high
+          tier: ingestion
+        annotations:
+          summary: "Abnormal failure rate in ingestion worker tasks"
+          description: "More than 5 worker repository ingestion tasks failed in the last 10 minutes."
+          runbook_url: "docs/operations/SLOS.md"

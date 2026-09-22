@@ -5,9 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import polars as pl
+import structlog
 
 from gain.config import get_settings
 from gain.model.deployment import CanonicalDeployment, DeploymentEnvironment
+
+log = structlog.get_logger(__name__)
 
 
 def write_canonical_deployments(deployments: list[CanonicalDeployment], path: Path) -> None:
@@ -35,19 +38,20 @@ def load_deployments_for_repo(
     if not target_dir.exists():
         return []
 
+    from gain.storage.analytics import scan_canonical
+
     env_str = environment.value if isinstance(environment, DeploymentEnvironment) else environment
+    lf = scan_canonical(target_dir, entity_type="deployment")
+    if repository:
+        lf = lf.filter(pl.col("repository_name_with_owner") == repository)
+    if env_str:
+        lf = lf.filter(pl.col("environment").str.to_lowercase() == env_str.lower())
 
-    matching: list[CanonicalDeployment] = []
-    for file_path in target_dir.glob("*deployment*.parquet"):
-        try:
-            records = read_canonical_deployments(file_path)
-            for r in records:
-                if repository and r.repository_name_with_owner != repository:
-                    continue
-                if env_str and r.environment.value != env_str.lower():
-                    continue
-                matching.append(r)
-        except Exception:
-            continue
-
-    return matching
+    try:
+        df = lf.collect()
+        if len(df) == 0:
+            return []
+        return [CanonicalDeployment.model_validate(row) for row in df.to_dicts()]
+    except Exception as exc:
+        log.warning("storage_scan_skipped", exc_info=exc)
+        return []

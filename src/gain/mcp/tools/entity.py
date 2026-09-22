@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import structlog
+
 from gain.config import get_settings
 from gain.mcp.auth.context import get_current_principal
 from gain.mcp.auth.models import Scope
@@ -11,6 +13,8 @@ from gain.mcp.schemas.entity import CanonicalEntityResult
 from gain.mcp.telemetry.logging import trace_mcp_request
 from gain.model.pr import PullRequest
 from gain.storage.analytics import read_canonical
+
+log = structlog.get_logger(__name__)
 
 
 def get_canonical_entity(identifier: str) -> CanonicalEntityResult:
@@ -64,7 +68,11 @@ def get_canonical_entity(identifier: str) -> CanonicalEntityResult:
             created_at_utc=matched_pr.created_at.isoformat(),
             closed_at_utc=matched_pr.closed_at.isoformat() if matched_pr.closed_at else None,
             merged_at_utc=matched_pr.merged_at.isoformat() if matched_pr.merged_at else None,
-            cycle_time_seconds=matched_pr.cycle_time_seconds(),
+            cycle_time_seconds=(
+                (matched_pr.merged_at - matched_pr.created_at).total_seconds()
+                if matched_pr.merged_at
+                else None
+            ),
             additions=matched_pr.additions,
             deletions=matched_pr.deletions,
             changed_files=matched_pr.changed_files,

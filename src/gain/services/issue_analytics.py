@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 
+import structlog
 from pydantic import BaseModel, ConfigDict, Field
 
 from gain.config import Settings, get_settings
@@ -11,7 +12,11 @@ from gain.mcp.schemas.ai import ClaimClassification
 from gain.model.issue import CanonicalIssue
 from gain.model.pr import PullRequest
 from gain.services.metrics import MetricService
+from gain.storage.analytics import scan_canonical
 from gain.storage.issues import load_issues_for_project_or_repo
+from gain.storage.relationships import RelationshipStore
+
+log = structlog.get_logger(__name__)
 
 
 class IssueAnalyticsResult(BaseModel):
@@ -38,9 +43,14 @@ class IssueAnalyticsResult(BaseModel):
 class IssueAnalyticsService:
     """Computes deterministic flow and cycle time metrics for enterprise work items."""
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        relationship_store: RelationshipStore | None = None,
+    ) -> None:
         self.settings = settings or get_settings()
         self.metric_service = MetricService(self.settings)
+        self.relationship_store = relationship_store
 
     def analyze_issues(
         self,
@@ -104,7 +114,9 @@ class IssueAnalyticsService:
             if repository
             else self._load_all_prs()
         )
-        linked_count, trace_rate = self._evaluate_traceability(issues, all_prs)
+        linked_count, trace_rate = self._evaluate_traceability(
+            issues, all_prs, relationship_store=self.relationship_store
+        )
 
         p50_str = f"{stats.get('p50_seconds', 0.0):.1f}s" if stats else "N/A"
         findings = [
@@ -143,26 +155,28 @@ class IssueAnalyticsService:
         canonical_dir = self.settings.canonical_dir
         if not canonical_dir.exists():
             return []
-        prs: list[PullRequest] = []
-        for file_path in canonical_dir.glob("*pull_request*.parquet"):
-            try:
-                from gain.storage.analytics import read_canonical
-
-                prs.extend(read_canonical(file_path))
-            except Exception:
-                continue
-        return prs
+        lf = scan_canonical(canonical_dir, entity_type="pull_request")
+        try:
+            df = lf.collect()
+            if len(df) == 0:
+                return []
+            return [PullRequest.model_validate(row) for row in df.to_dicts()]
+        except Exception as exc:
+            log.warning("load_all_prs_failed", exc_info=exc)
+            return []
 
     @staticmethod
     def _evaluate_traceability(
         issues: list[CanonicalIssue],
         prs: list[PullRequest],
+        relationship_store: RelationshipStore | None = None,
     ) -> tuple[int, float]:
-        """Correlate issue keys with PR metadata."""
+        """Correlate issue keys with PR metadata using explicit links, index, or relationships."""
         if not issues:
             return 0, 0.0
 
         linked_issues: set[str] = set()
+        pr_numbers: set[int] = {pr.number for pr in prs}
 
         for issue in issues:
             # 1. Explicit links in canonical record
@@ -170,12 +184,20 @@ class IssueAnalyticsService:
                 linked_issues.add(issue.key)
                 continue
 
-            # 2. Inferred pattern match in PR numbers or repository branch/title
+            # 2. Materialized links from RelationshipStore
+            if relationship_store and relationship_store.get_linked_prs(issue.key):
+                linked_issues.add(issue.key)
+                continue
+
+            # 3. Numeric issue key matches PR number (fast O(1) set lookup)
+            if issue.key.isdigit() and int(issue.key) in pr_numbers:
+                linked_issues.add(issue.key)
+                continue
+
+            # 4. Inferred pattern match against distinct PR numbers
             pattern = re.compile(rf"\b{re.escape(issue.key)}\b", re.IGNORECASE)
-            for pr in prs:
-                if (issue.key.isdigit() and int(issue.key) == pr.number) or pattern.search(
-                    str(pr.number)
-                ):
+            for pr_num in pr_numbers:
+                if pattern.search(str(pr_num)):
                     linked_issues.add(issue.key)
                     break
 

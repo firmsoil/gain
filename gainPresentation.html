@@ -1227,10 +1227,11 @@ if definition["metric_version"] != CycleTimeMetric.metric_version:
 
         <div class="columns col-50-50">
           <div class="panel-card card-navy">
-            <h4>Cryptographic Provenance</h4>
+            <h4>Cryptographic Provenance & Safety</h4>
             <ul>
               <li>Ingestion audit stamps on every raw/canonical record: <code>ingestion_run_id</code>, <code>source_collected_at</code>.</li>
-              <li>Requirements track SHA-256 <code>input_hash</code> and <code>output_hash</code> across all AI revisions.</li>
+              <li><strong>Atomic POSIX Writes</strong>: Parquet and observation datasets stream to unique temporary files (<code>.tmp.&lt;uuid&gt;</code>) before atomic replace.</li>
+              <li><strong>Compaction Lock Protection</strong>: Exclusive <code>.compaction.lock</code> file eliminates partition collision under concurrent worker execution.</li>
             </ul>
           </div>
 

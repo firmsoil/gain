@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+import structlog
+
 from gain.errors import InvalidLifecycleTransitionError, RequirementValidationError
 from gain.requirements.generation import StoryGenerationProvider, StoryGenerationService
 from gain.requirements.models import (
@@ -19,6 +21,8 @@ from gain.requirements.models import (
 from gain.requirements.quality import StoryQualityReport, validate_story_quality
 from gain.requirements.sdd import build_specification_seed
 from gain.requirements.storage import RequirementsStore, SpecificationSeedStore
+
+log = structlog.get_logger(__name__)
 
 
 class RequirementsService:
@@ -97,7 +101,8 @@ class RequirementsService:
         )
         try:
             story = self.generation_service.generate(context, provider, generation_parameters)
-        except Exception:
+        except (OSError, Exception) as exc:
+            log.error("story_generation_failed", context_id=context.context_id, exc_info=exc)
             self.store.append_event(
                 RequirementEvent(
                     event_type="story_generation_failed", context_id=context.context_id, actor=actor
@@ -143,7 +148,8 @@ class RequirementsService:
         )
         try:
             generated = self.generation_service.generate(context, provider, generation_parameters)
-        except Exception:
+        except (OSError, Exception) as exc:
+            log.error("story_regeneration_failed", story_id=current.story_id, exc_info=exc)
             self.store.append_event(
                 RequirementEvent(
                     event_type="story_regeneration_failed",

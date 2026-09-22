@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "gain.fullname" . }}-config
+  labels:
+    {{- include "gain.labels" . | nindent 4 }}
+data:
+  GAIN_ENVIRONMENT: {{ .Values.global.environment | quote }}
+  GAIN_LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  GAIN_LOG_FORMAT: {{ .Values.config.logFormat | quote }}
+  GAIN_DATA_DIR: {{ .Values.persistence.mountPath | quote }}
+  GAIN_RAW_DIR: {{ printf "%s/raw" .Values.persistence.mountPath | quote }}
+  GAIN_CANONICAL_DIR: {{ printf "%s/canonical" .Values.persistence.mountPath | quote }}
+  GAIN_OUTPUT_DIR: {{ printf "%s/output" .Values.persistence.mountPath | quote }}
+  GAIN_REGISTRY_PATH: {{ printf "%s/registry.parquet" .Values.persistence.mountPath | quote }}
+  GAIN_GITHUB_API_URL: {{ .Values.config.githubApiUrl | quote }}
+  GAIN_GITHUB_AUTH_MODE: {{ .Values.config.authMode | quote }}
+  {{- if .Values.config.githubAppId }}
+  GAIN_GITHUB_APP_ID: {{ .Values.config.githubAppId | quote }}
+  {{- end }}
+  {{- if .Values.config.githubInstallationIds }}
+  GAIN_GITHUB_INSTALLATION_IDS: {{ .Values.config.githubInstallationIds | quote }}
+  {{- end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "gain.fullname" . }}-secret
+  labels:
+    {{- include "gain.labels" . | nindent 4 }}
+type: Opaque
+data:
+  {{- if .Values.secrets.githubToken }}
+  GITHUB_TOKEN: {{ .Values.secrets.githubToken | b64enc | quote }}
+  {{- end }}
+  {{- if .Values.secrets.githubAppPrivateKey }}
+  GITHUB_APP_PRIVATE_KEY: {{ .Values.secrets.githubAppPrivateKey | b64enc | quote }}
+  {{- end }}

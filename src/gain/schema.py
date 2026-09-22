@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import ValidationError
 
 from gain.model.pr import PullRequest
+from gain.util import parse_nullable_utc_datetime, parse_utc_datetime
 
 
 def normalize_raw_record(record: dict[str, Any]) -> PullRequest:
@@ -19,16 +19,16 @@ def normalize_raw_record(record: dict[str, Any]) -> PullRequest:
         repository_id=str(metadata["repository_id"]),
         author_login=author.get("login"),
         author_type=author.get("__typename"),
-        created_at=_parse_datetime(node["createdAt"]),
-        closed_at=_parse_nullable_datetime(node.get("closedAt")),
-        merged_at=_parse_nullable_datetime(node.get("mergedAt")),
+        created_at=parse_utc_datetime(node["createdAt"]),
+        closed_at=parse_nullable_utc_datetime(node.get("closedAt")),
+        merged_at=parse_nullable_utc_datetime(node.get("mergedAt")),
         state=str(node["state"]),
         is_draft=bool(node.get("isDraft", False)),
         additions=_optional_int(node.get("additions")),
         deletions=_optional_int(node.get("deletions")),
         changed_files=_optional_int(node.get("changedFiles")),
         review_decision=node.get("reviewDecision"),
-        collected_at=_parse_datetime(metadata["collected_at"]),
+        collected_at=parse_utc_datetime(metadata["collected_at"]),
         ingestion_run_id=str(metadata["ingestion_run_id"]),
     )
 
@@ -44,17 +44,6 @@ def normalize_records(
         except (KeyError, TypeError, ValueError, ValidationError) as exc:
             errors.append({"record_index": index, "error": str(exc)})
     return valid, errors
-
-
-def _parse_datetime(value: str) -> datetime:
-    dt = datetime.fromisoformat(value.replace("Z", "+00:00"))
-    if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC)
-
-
-def _parse_nullable_datetime(value: str | None) -> datetime | None:
-    return None if value is None else _parse_datetime(value)
 
 
 def _optional_int(value: Any) -> int | None:

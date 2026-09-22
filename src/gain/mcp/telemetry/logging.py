@@ -10,6 +10,8 @@ from typing import Any
 
 import structlog
 
+from gain.telemetry.metrics import MCP_REQUEST_DURATION_SECONDS, MCP_REQUESTS_TOTAL
+
 logger = structlog.get_logger("gain.mcp")
 
 
@@ -36,7 +38,10 @@ def trace_mcp_request(
     logger.info("mcp_request_started", **context)
     try:
         yield context
-        duration_ms = round((time.monotonic() - start_time) * 1000, 2)
+        duration_sec = time.monotonic() - start_time
+        duration_ms = round(duration_sec * 1000, 2)
+        MCP_REQUESTS_TOTAL.inc(1.0, tool_name=operation_name, status="success")
+        MCP_REQUEST_DURATION_SECONDS.observe(duration_sec, tool_name=operation_name)
         logger.info(
             "mcp_request_completed",
             duration_ms=duration_ms,
@@ -44,8 +49,11 @@ def trace_mcp_request(
             **context,
         )
     except Exception as exc:
-        duration_ms = round((time.monotonic() - start_time) * 1000, 2)
+        duration_sec = time.monotonic() - start_time
+        duration_ms = round(duration_sec * 1000, 2)
         error_type = type(exc).__name__
+        MCP_REQUESTS_TOTAL.inc(1.0, tool_name=operation_name, status="error")
+        MCP_REQUEST_DURATION_SECONDS.observe(duration_sec, tool_name=operation_name)
         logger.error(
             "mcp_request_failed",
             duration_ms=duration_ms,

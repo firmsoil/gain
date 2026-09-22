@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# Python caches and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+.venv/
+env/
+venv/
+ENV/
+
+# Development, tests, and coverage
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Local data and logs
+data/
+*.parquet
+*.jsonl
+*.tmp
+*.log
+
+# Documentation and presentations
+docs/
+gainPresentation.*
+*.png
+*.svg
+
+# Agent artifacts and temp
+.gemini/
+.agents/
+scratch/

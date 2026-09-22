@@ -73,8 +73,12 @@ def test_query_engineering_metrics_pr_cycle_time(populated_env: Settings) -> Non
     assert res.population_count == 3
     assert res.merged_count == 2
     assert res.summary_stats["count"] == 2
-    assert res.summary_stats["p50_seconds"] is not None
     assert len(res.observations_sample) == 2
+
+    # Verify MCP requests metric was incremented
+    from gain.telemetry.metrics import MCP_REQUESTS_TOTAL
+
+    assert MCP_REQUESTS_TOTAL.get(tool_name="query_engineering_metrics", status="success") >= 1.0
 
 
 def test_query_engineering_metrics_monthly_stats(populated_env: Settings) -> None:

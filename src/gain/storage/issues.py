@@ -5,9 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import polars as pl
+import structlog
 
 from gain.config import get_settings
 from gain.model.issue import CanonicalIssue
+
+log = structlog.get_logger(__name__)
 
 
 def write_canonical_issues(issues: list[CanonicalIssue], path: Path) -> None:
@@ -42,7 +45,8 @@ def load_issues_for_project_or_repo(
                 matching.extend([i for i in issues if i.project_key == project_key])
             else:
                 matching.extend(issues)
-        except Exception:
+        except (FileNotFoundError, Exception) as exc:
+            log.warning("storage_file_skipped", file_path=str(file_path), exc_info=exc)
             continue
 
     return matching

@@ -1,0 +1,124 @@
+# Default values for GAIN Helm Chart (Production Enterprise Standard)
+global:
+  environment: production
+
+image:
+  repository: ghcr.io/firmsoil/gain
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop:
+      - ALL
+
+mcpServer:
+  enabled: true
+  replicas: 3
+  port: 8000
+  transport: http
+  streamableHttpPath: /mcp
+  resources:
+    requests:
+      cpu: 500m
+      memory: 1Gi
+    limits:
+      cpu: 2000m
+      memory: 4Gi
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 75
+    targetMemoryUtilizationPercentage: 80
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 8000
+    initialDelaySeconds: 10
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: 8000
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+service:
+  type: ClusterIP
+  port: 8000
+  targetPort: 8000
+
+scheduledSync:
+  enabled: true
+  schedule: "0 */2 * * *" # Every 2 hours
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  concurrencyPolicy: Forbid
+  workers: 8
+  batchSize: 50
+  tier: "critical"
+  resources:
+    requests:
+      cpu: 1000m
+      memory: 2Gi
+    limits:
+      cpu: 4000m
+      memory: 8Gi
+
+persistence:
+  enabled: true
+  # For multi-pod ReadWriteMany (RWX), use a distributed filesystem storage class
+  # AWS: "efs-sc" | GCP: "filestore-csi" | Azure: "azurefile-csi" | On-Prem: "nfs-client"
+  storageClass: "efs-sc"
+  accessModes:
+    - ReadWriteMany
+  size: 100Gi
+  mountPath: /app/data
+
+config:
+  logLevel: INFO
+  logFormat: json
+  githubApiUrl: "https://api.github.com/graphql"
+  authMode: "app" # "app" or "pat"
+  githubAppId: ""
+  githubInstallationIds: ""
+
+secrets:
+  githubToken: ""
+  githubAppPrivateKey: ""
+
+networkPolicy:
+  enabled: true
+  ingress:
+    enabled: true
+  egress:
+    enabled: true
+    allowedCIDRs: []
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

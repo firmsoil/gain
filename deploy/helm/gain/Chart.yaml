@@ -1,0 +1,16 @@
+apiVersion: v2
+name: gain
+description: Production Helm chart for GAIN (GitHub AI Intelligence Network) on Kubernetes
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - analytics
+  - github
+  - dora
+  - metrics
+  - engineering-intelligence
+maintainers:
+  - name: firmsoil
+    email: dev@gain.enterprise
+home: https://github.com/firmsoil/gain

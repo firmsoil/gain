@@ -1,0 +1,63 @@
+{{- if .Values.mcpServer.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gain.fullname" . }}-mcp
+  labels:
+    {{- include "gain.labels" . | nindent 4 }}
+    app.kubernetes.io/component: mcp-server
+spec:
+  {{- if not .Values.mcpServer.autoscaling.enabled }}
+  replicas: {{ .Values.mcpServer.replicas }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      {{- include "gain.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: mcp-server
+  template:
+    metadata:
+      labels:
+        {{- include "gain.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: mcp-server
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: mcp-server
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["gain", "mcp", "--transport", "http", "--host", "0.0.0.0", "--port", "{{ .Values.mcpServer.port }}"]
+          ports:
+            - name: http-mcp
+              containerPort: {{ .Values.mcpServer.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "gain.fullname" . }}-config
+            - secretRef:
+                name: {{ include "gain.fullname" . }}-secret
+          livenessProbe:
+            {{- toYaml .Values.mcpServer.livenessProbe | nindent 12 }}
+          readinessProbe:
+            {{- toYaml .Values.mcpServer.readinessProbe | nindent 12 }}
+          resources:
+            {{- toYaml .Values.mcpServer.resources | nindent 12 }}
+          volumeMounts:
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: {{ .Values.persistence.mountPath }}
+            {{- end }}
+      volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ include "gain.fullname" . }}-data
+        {{- end }}
+{{- end }}

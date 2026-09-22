@@ -5,9 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import polars as pl
+import structlog
 
 from gain.config import get_settings
 from gain.model.commit import CanonicalCommit
+
+log = structlog.get_logger(__name__)
 
 
 def write_canonical_commits(commits: list[CanonicalCommit], path: Path) -> None:
@@ -34,15 +37,17 @@ def load_commits_for_repo(
     if not target_dir.exists():
         return []
 
-    matching: list[CanonicalCommit] = []
-    for file_path in target_dir.glob("*commit*.parquet"):
-        try:
-            records = read_canonical_commits(file_path)
-            if repository:
-                matching.extend([c for c in records if c.repository_name_with_owner == repository])
-            else:
-                matching.extend(records)
-        except Exception:
-            continue
+    from gain.storage.analytics import scan_canonical
 
-    return matching
+    lf = scan_canonical(target_dir, entity_type="commit")
+    if repository:
+        lf = lf.filter(pl.col("repository_name_with_owner") == repository)
+
+    try:
+        df = lf.collect()
+        if len(df) == 0:
+            return []
+        return [CanonicalCommit.model_validate(row) for row in df.to_dicts()]
+    except Exception as exc:
+        log.warning("storage_scan_skipped", exc_info=exc)
+        return []

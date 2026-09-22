@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+import polars as pl
 import structlog
 
 from gain.config import Settings, get_settings
 from gain.mcp.schemas.dora import DORAMetricItem, DORAMetricsResult
 from gain.model.deployment import CanonicalDeployment
-from gain.storage.commits import load_commits_for_repo
+from gain.storage.analytics import scan_canonical
 from gain.storage.deployments import load_deployments_for_repo
 
 log = structlog.get_logger(__name__)
@@ -162,14 +163,24 @@ class DORAService:
         repository: str | None,
     ) -> float | None:
         """Correlate deployments with canonical commits to determine lead time."""
-        commits = load_commits_for_repo(
-            repository=repository,
-            canonical_dir=self.settings.canonical_dir,
-        )
-        if not commits:
+        if not deployments:
             return None
 
-        commit_map = {c.sha: c.committed_at for c in commits}
+        # Scan canonical commits using Polars LazyFrame with predicate pushdown on repository
+        lf_commits = scan_canonical(self.settings.canonical_dir, entity_type="commit")
+        if repository:
+            lf_commits = lf_commits.filter(pl.col("repository_name_with_owner") == repository)
+
+        try:
+            commits_df = lf_commits.select(["sha", "committed_at"]).collect()
+        except Exception as exc:
+            log.warning("commits_scan_failed", exc_info=exc)
+            return None
+
+        if len(commits_df) == 0:
+            return None
+
+        commit_map = {row["sha"]: row["committed_at"] for row in commits_df.to_dicts()}
         durations: list[float] = []
 
         for dep in deployments:

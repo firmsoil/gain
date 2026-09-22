@@ -1,0 +1,60 @@
+{{- if .Values.scheduledSync.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "gain.fullname" . }}-sync
+  labels:
+    {{- include "gain.labels" . | nindent 4 }}
+    app.kubernetes.io/component: scheduled-sync
+spec:
+  schedule: {{ .Values.scheduledSync.schedule | quote }}
+  concurrencyPolicy: {{ .Values.scheduledSync.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.scheduledSync.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.scheduledSync.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "gain.selectorLabels" . | nindent 12 }}
+            app.kubernetes.io/component: scheduled-sync
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+            - name: sync-worker
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - "gain"
+                - "sync"
+                - "--workers"
+                - "{{ .Values.scheduledSync.workers }}"
+                - "--batch-size"
+                - "{{ .Values.scheduledSync.batchSize }}"
+                {{- if .Values.scheduledSync.tier }}
+                - "--tier"
+                - "{{ .Values.scheduledSync.tier }}"
+                {{- end }}
+              envFrom:
+                - configMapRef:
+                    name: {{ include "gain.fullname" . }}-config
+                - secretRef:
+                    name: {{ include "gain.fullname" . }}-secret
+              resources:
+                {{- toYaml .Values.scheduledSync.resources | nindent 16 }}
+              volumeMounts:
+                {{- if .Values.persistence.enabled }}
+                - name: data
+                  mountPath: {{ .Values.persistence.mountPath }}
+                {{- end }}
+          volumes:
+            {{- if .Values.persistence.enabled }}
+            - name: data
+              persistentVolumeClaim:
+                claimName: {{ include "gain.fullname" . }}-data
+            {{- end }}
+{{- end }}

@@ -19,5 +19,6 @@ def test_normalization() -> None:
     assert len(prs) == 2
     assert not errors
     assert prs[0].number == 1
-    assert prs[0].cycle_time_seconds() == 21600.0
+    assert prs[0].merged_at is not None
+    assert (prs[0].merged_at - prs[0].created_at).total_seconds() == 21600.0
     assert prs[1].author_type == "Bot"

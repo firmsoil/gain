@@ -5,9 +5,12 @@ from __future__ import annotations
 from pathlib import Path
 
 import polars as pl
+import structlog
 
 from gain.config import get_settings
 from gain.model.ai import AiDeveloperTelemetry
+
+log = structlog.get_logger(__name__)
 
 
 def write_ai_telemetry(records: list[AiDeveloperTelemetry], path: Path) -> None:
@@ -38,7 +41,8 @@ def load_ai_telemetry_for_repo(
         try:
             records = read_ai_telemetry(file_path)
             matching_records.extend([r for r in records if r.repository == repo])
-        except Exception:
+        except (FileNotFoundError, Exception) as exc:
+            log.warning("storage_file_skipped", file_path=str(file_path), exc_info=exc)
             continue
 
     return matching_records

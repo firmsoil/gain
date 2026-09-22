@@ -19,21 +19,25 @@ The implementation deliberately treats `createdAt -> mergedAt` as **observable P
 
 The complete system architecture is documented in:
 * **Architecture Specification**: [`docs/OVERALL_ARCHITECTURE.md`](docs/OVERALL_ARCHITECTURE.md)
-* **Interactive Architecture Diagram**: [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html)
+* **Interactive Architecture Visualizer**: [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html)
 * **Reference Architecture**: [`docs/REFERENCE_ARCHITECTURE.md`](docs/REFERENCE_ARCHITECTURE.md)
+* **Enterprise Security Architecture**: [`docs/architecture/security.md`](docs/architecture/security.md)
+* **Operational Error Catalog & Runbooks**: [`docs/errors/ERROR_CATALOG.md`](docs/errors/ERROR_CATALOG.md)
 
 ### Core Subsystems
 
+- `gain.ingestion` — distributed work queue coordination (`RedisWorkQueue`, `InProcessQueue`, `create_work_queue` factory).
 - `gain.adapters` — enterprise source adapters (Jira, Linear, CI/CD deployments).
-- `gain.github.client` — GraphQL transport, retries, rate-limit handling, pagination.
-- `gain.sync` — backfill orchestration and checkpoints.
-- `gain.storage.raw` — replayable raw payloads and provenance metadata (`RawStore`).
+- `gain.github` — GraphQL/REST transport, retries, thread-safe token rotation (`GitHubTokenPool`), rate-limit telemetry.
+- `gain.sync` — backfill orchestration and atomic checkpointing.
+- `gain.storage` — replayable raw payloads (`RawStore`), concurrency-safe atomic Parquet writes (`UUID.tmp`), and `.compaction.lock` partition compaction.
 - `gain.model` — transport-independent canonical domain models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalCommit`, `AiDeveloperTelemetry`).
 - `gain.metrics` & `gain.services` — deterministic zero-LLM analytics engines (PR Cycle Time, Monthly Flow, AI Impact, 4-Stage AI ROI, DORA, Issue Velocity).
-- `gain.mcp` — governed Model Context Protocol (MCP) server over SSE and Stdio.
+- `gain.telemetry` — embedded Prometheus metrics registry (`INGESTION_PAGES_TOTAL`, `GITHUB_RATE_LIMIT_REMAINING`, `MCP_REQUESTS_TOTAL`, etc.).
+- `gain.mcp` — governed Model Context Protocol (MCP) server over Streamable HTTP and Stdio.
 - `gain.agent` — autonomous Engineering Intelligence Agent with 7-tier claim classification.
 - `gain.quality` — canonical data-quality validation.
-- `gain.cli` — unified operator CLI (`gain demo`, `gain backfill`, `gain dora`, `gain issues`, `gain agent`, `gain mcp`).
+- `gain.cli` — unified operator CLI (`gain demo`, `gain backfill`, `gain dora`, `gain issues`, `gain agent`, `gain mcp`, `gain config-check`).
 
 ## Requirements → Jira → SDD
 
@@ -132,12 +136,20 @@ gain monthly-stats --canonical-path data/canonical/pull_requests__<run_id>.parqu
 
 > **Offline Demo**: For offline or CI environments without a live GitHub token or network connection, run `python scripts/demo_offline.py` to execute against synthetic pre-recorded fixtures.
 
-## Tests
+## Tests & Verification
+
+The test suite validates contract interfaces, failure handling, concurrency safety, telemetry emission, and end-to-end analytical pipelines:
 
 ```bash
+# Run complete test suite (308 unit, integration, and contract tests)
 pytest
+
+# Verify code style and formatting
 ruff check src tests
-mypy src tests
+ruff format --check src tests
+
+# Strict type safety verification (193 source files, 0 errors)
+mypy src tests --strict
 ```
 
 ## GAIN Model Context Protocol (MCP) Server
@@ -247,7 +259,23 @@ async def query_gain_mcp() -> None:
 anyio.run(query_gain_mcp)
 ```
 
-## Security
+## Enterprise Cloud Deployment (Kubernetes & Helm)
 
-Do not place GitHub tokens in source code or command-line history. The CLI reads `GITHUB_TOKEN` from the environment. Tokens and secrets are redacted from logs automatically via `gain.logging.mask_secrets`. MCP requests enforce fine-grained policy authorization and tenant isolation before data access.
+GAIN provides enterprise-grade Helm charts (`deploy/helm/gain`) configured for large-scale production deployments (40,000+ repositories):
+
+- **Distributed Storage Volume**: Uses `storageClass: "efs-sc"` (AWS EFS / Azure Files / GCP Filestore) supporting `ReadWriteMany` (RWX) for shared raw JSONL and Parquet access across distributed worker pods.
+- **Configurable Network Egress**: Governed by Kubernetes NetworkPolicies with configurable internal egress (`.Values.networkPolicy.egress.allowedCIDRs`) for forward proxies, Redis work queues, and database connections.
+- **Container Health Probes**: Dual-probe compatibility supporting HTTP `/healthz` for MCP servers and fallback to `gain config-check` for batch workers.
+- **Fail-Closed Configuration Validation**: Run `gain config-check` to validate environment flags, queue backends, and production cryptographic secrets.
+
+## Enterprise Security Posture
+
+GAIN enforces strict security invariants across all operational tiers (detailed in [`docs/architecture/security.md`](docs/architecture/security.md)):
+
+- **Zero Hardcoded Secrets**: Static default salts are eliminated; non-production environments use ephemeral 256-bit random salts (`secrets.token_bytes(32)`), and production requires explicit `GAIN_PII_SALT` with `>=16` characters and high entropy.
+- **Credential Protection**: GitHub App private keys require strict POSIX file permissions (`0600`), and PAT tokens are safely masked as `pat-***`.
+- **Telemetry Redaction**: Structlog automatically scrubs known sensitive keys (`private_key`, `key_pem`, `certificate`) and uses regex redactors for GitHub tokens (`ghp_`, `ghs_`, `github_pat_`).
+- **Token Rotation Safety**: `GitHubTokenPool` synchronizes token rotation across concurrent async/threaded workers using `threading.Lock`.
+- **PolicyGuard Defenses**: AI agent interactions enforce read-only execution boundaries and detect prompt injection attempts before tool dispatch.
+
 

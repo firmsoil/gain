@@ -52,11 +52,6 @@ class PullRequest(BaseModel):
     def merged(self) -> bool:
         return self.merged_at is not None
 
-    def cycle_time_seconds(self) -> float | None:
-        if self.merged_at is None:
-            return None
-        return (self.merged_at - self.created_at).total_seconds()
-
     def to_record(self) -> dict[str, Any]:
         return {
             "github_node_id": self.github_node_id,
