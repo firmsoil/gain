@@ -17,12 +17,39 @@ The implementation deliberately treats `createdAt -> mergedAt` as **observable P
 
 ## Architecture & Platform Design
 
-The complete system architecture is documented in:
-* **Architecture Specification**: [`docs/OVERALL_ARCHITECTURE.md`](docs/OVERALL_ARCHITECTURE.md)
+The GAIN platform architecture spans six operational tiers—from multi-source raw telemetry capture to deterministic analytics, governed MCP interfaces, autonomous evidence synthesis, and enterprise cloud infrastructure:
+
+[![GAIN Platform Overall Architecture](docs/architecture/gain_overall_architecture.png)](docs/architecture/gain_overall_architecture.html)
+
+> 💡 **Interactive Architecture Visualizer**: Open [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html) directly in a browser to explore interactive layer highlighting, component inspect modals, and data-flow animations.
+
+The complete system architecture and operational specifications are documented in:
 * **Interactive Architecture Visualizer**: [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html)
+* **Architecture Specification**: [`docs/OVERALL_ARCHITECTURE.md`](docs/OVERALL_ARCHITECTURE.md)
 * **Reference Architecture**: [`docs/REFERENCE_ARCHITECTURE.md`](docs/REFERENCE_ARCHITECTURE.md)
 * **Enterprise Security Architecture**: [`docs/architecture/security.md`](docs/architecture/security.md)
 * **Operational Error Catalog & Runbooks**: [`docs/errors/ERROR_CATALOG.md`](docs/errors/ERROR_CATALOG.md)
+
+### Architectural Tiers & Operational Guarantees
+
+As detailed in the visual diagram above, the platform operates across 6 structured tiers:
+
+| Tier | Subsystem | Key Responsibilities & Invariants |
+| :--- | :--- | :--- |
+| **Tier 1** | **Multi-Source Telemetry Acquisition** | Verbatim raw capture into `RawStore` JSONL (`data/raw/...`); distributed work coordination via `RedisWorkQueue` / `InProcessQueue`; thread-safe token rotation (`GitHubTokenPool`). |
+| **Tier 2** | **Canonical Domain & Analytics Engine** | Transport-independent models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `AiDeveloperTelemetry`); concurrency-safe atomic Parquet writes (`.tmp.<uuid>`); deterministic pure Python metric engines (`GAIN-PR-001`, `GAIN-PR-010`, DORA, AI ROI). |
+| **Tier 3** | **Governed GAIN MCP Server** | Dual transport (`stdio` & Streamable HTTP / SSE); Bearer token auth, RBAC & rate limiting; 12 governed read-only analytical tools and versioned resources. |
+| **Tier 4** | **Autonomous Intelligence Agent** | `AgentGateway`, `InvestigationPlanner`, `PolicyGuard` prompt defense; primary GAIN MCP routing with circuit breaker; 7-tier claim classification (`Observed`, `Derived`, `Associated`, `Attributed`, `Modeled`, `Assumed`, `Unknown`). |
+| **Tier 5** | **Antigravity Multi-Agent Hub** | 6 persistent specialist subagents (`gain-architect`, `gain-data-engineer`, `gain-analytics-engineer`, `gain-platform-engineer`, `gain-security-engineer`, `gain-verification-engineer`); unified `gain` operator CLI. |
+| **Tier 6** | **Enterprise Cloud & Security** | Embedded Prometheus metrics registry; operational error runbooks; ephemeral 256-bit PII salt, POSIX 0600 key files, token redactors; production Kubernetes Helm charts with RWX shared storage (`efs-sc`). |
+
+#### Core Architectural Guarantees
+1. **Source of Truth**: Observable GitHub telemetry remains immutable ground truth. Raw API responses are stored losslessly in JSONL format before transformation for offline replayability (`replay_run()`).
+2. **Zero-LLM in Math**: All metric computations are pure Python deterministic algorithms cataloged in `docs/metrics/metric-catalog.yaml`. LLM reasoning in numerical calculation is strictly forbidden.
+3. **Transport Independence**: Canonical domain models (`gain.model.*`) expose zero GraphQL transport artifacts (cursors, pageInfo, edges).
+4. **Claim Traceability**: Every agent synthesis assertion is tagged with an explicit claim classification backed by verifiable evidence packages.
+5. **Concurrency Safety**: Race-free atomic UUID temporary writes, `.compaction.lock` mutex protection, and distributed queue isolation across 40,000+ repositories.
+6. **Zero-Trust Security**: Ephemeral 256-bit PII salt in non-production, `>=16`-character high-entropy salt enforcement in production, POSIX 0600 key permissions, and automatic regex token scrubbing.
 
 ### Core Subsystems
 
