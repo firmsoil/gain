@@ -43,9 +43,33 @@ class ROIScenarioResult(BaseModel):
     time_period: str
     population: str
     investment_cost: float | None = None
+    hard_costs: float | None = Field(
+        default=None,
+        description="Direct hard costs: licenses, token/usage, training, infrastructure",
+    )
+    j_curve_cost: float | None = Field(
+        default=None, description="Quantified tuition cost of adoption-phase productivity dip"
+    )
     economic_value_components: dict[str, float] = Field(default_factory=dict)
+    headcount_reinvestment_value: float | None = Field(
+        default=None,
+        description="Reclaimed engineering capacity for innovation net of verification tax",
+    )
+    feature_revenue_lift: float | None = Field(
+        default=None,
+        description="Incremental revenue from accelerated feature optionality/delivery",
+    )
+    instability_impact: float | None = Field(
+        default=None, description="Downtime impact (instability tax) from changes in CFR and FDRT"
+    )
+    total_annual_value: float | None = Field(
+        default=None, description="Consolidated annual gross economic value"
+    )
     net_benefit: float | None = None
     roi_percentage: float | None = None
+    payback_period_years: float | None = Field(
+        default=None, description="Time in years to break even on total first-year investment"
+    )
     assumptions: list[str] = Field(default_factory=list)
     attribution_basis: str | None = None
     sensitivity_analysis: dict[str, Any] = Field(default_factory=dict)

@@ -137,6 +137,27 @@ def register_metrics_commands(app: typer.Typer) -> None:
         seat_cost: float = typer.Option(
             19.0, "--seat-cost", help="Monthly license cost per seat ($/mo)."
         ),
+        dora_model: bool = typer.Option(
+            False, "--dora", help="Use Google Cloud DORA 2026 two-ledger economic framework."
+        ),
+        staff_size: int | None = typer.Option(
+            None, "--staff-size", help="Technical staff size in FTEs (DORA model)."
+        ),
+        salary: float = typer.Option(
+            176000.0, "--salary", help="Fully-loaded developer salary (DORA model)."
+        ),
+        training_cost: float = typer.Option(
+            9600.0, "--training-cost", help="Training and enablement cost per user (DORA model)."
+        ),
+        infra_cost: float = typer.Option(
+            100000.0, "--infra-cost", help="Annual AI infrastructure cost (DORA model)."
+        ),
+        j_curve_drop: float = typer.Option(
+            0.15, "--j-curve-drop", help="J-Curve adoption productivity drop (DORA model)."
+        ),
+        j_curve_months: float = typer.Option(
+            3.0, "--j-curve-months", help="J-Curve learning phase in months (DORA model)."
+        ),
         json_output: bool = typer.Option(False, "--json", help="Output raw JSON scenario payload."),
     ) -> None:
         """Calculate deterministic AI tooling economic ROI and sensitivity scenarios."""
@@ -144,18 +165,45 @@ def register_metrics_commands(app: typer.Typer) -> None:
 
         configure_logging()
         svc = AIROIService()
-        res = svc.calculate_roi_scenario(
-            population=population,
-            developer_count=devs,
-            hourly_rate=hourly_rate,
-            monthly_license_cost=seat_cost,
-        )
+
+        if dora_model or staff_size is not None:
+            res = svc.calculate_roi_scenario(
+                population=population,
+                staff_size=staff_size or 500,
+                salary=salary,
+                annual_training_cost_per_user=training_cost,
+                annual_infra_cost=infra_cost,
+                j_curve_drop=j_curve_drop,
+                j_curve_months=j_curve_months,
+                use_dora_model=True,
+            )
+        else:
+            res = svc.calculate_roi_scenario(
+                population=population,
+                developer_count=devs,
+                hourly_rate=hourly_rate,
+                monthly_license_cost=seat_cost,
+            )
+
         if json_output:
             typer.echo(json.dumps(res.model_dump(mode="json"), indent=2))
         else:
             typer.echo(f"Modeled AI Tooling ROI: {res.roi_percentage:.1f}%")
-            typer.echo(f"Net Economic Benefit: ${res.net_benefit:,.2f}")
-            typer.echo(f"Annual Tool Investment: ${res.investment_cost:,.2f}")
+            if res.model_version.startswith("gain-dora-roi"):
+                typer.echo(f"Total First-Year Investment: ${res.investment_cost:,.2f}")
+                typer.echo(f"  - Direct Hard Costs:       ${res.hard_costs:,.2f}")
+                typer.echo(f"  - J-Curve Tuition Cost:    ${res.j_curve_cost:,.2f}")
+                typer.echo(f"Total Annual Gross Value:    ${res.total_annual_value:,.2f}")
+                typer.echo(f"  - Headcount Reinvestment:  ${res.headcount_reinvestment_value:,.2f}")
+                typer.echo(f"  - Feature Revenue Lift:    ${res.feature_revenue_lift:,.2f}")
+                typer.echo(f"  - Downtime Stability Tax:  ${res.instability_impact:,.2f}")
+                typer.echo(f"Net Economic Benefit:        ${res.net_benefit:,.2f}")
+                typer.echo(
+                    f"Payback Period:              {res.payback_period_years or 0:.1f} years"
+                )
+            else:
+                typer.echo(f"Net Economic Benefit: ${res.net_benefit:,.2f}")
+                typer.echo(f"Annual Tool Investment: ${res.investment_cost:,.2f}")
             min_roi = res.uncertainty_range.get("min_roi_percentage", 0.0)
             max_roi = res.uncertainty_range.get("max_roi_percentage", 0.0)
             typer.echo(f"Sensitivity Uncertainty: {min_roi:.1f}% to {max_roi:.1f}%")

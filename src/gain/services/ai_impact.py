@@ -114,6 +114,12 @@ class AIImpactService:
             ),
         ]
 
+        if delta_p50 > 0:
+            findings.append(
+                "AI-cohort PRs exhibit longer cycle times, indicating empirical 'Verification Tax' "
+                "(code review and testing latency outstripping generation speedups, per DORA 2026)."
+            )
+
         limitations = [
             (
                 "Cohort differences reflect observed statistical association, "
@@ -124,7 +130,8 @@ class AIImpactService:
             limitations.append(
                 f"PR size disparity detected (AI cohort avg: {ai_avg_lines:.0f} lines "
                 f"vs baseline: {base_avg_lines:.0f} lines); "
-                "PR size is an active confounding factor."
+                "PR size is an active confounding factor. DORA capabilities recommend smaller "
+                "batch sizes to mitigate code review bottlenecks."
             )
 
         return AIImpactResult(

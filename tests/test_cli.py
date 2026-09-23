@@ -58,6 +58,19 @@ def test_cli_ai_roi(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     assert "Modeled AI Tooling ROI:" in result.stdout
 
 
+def test_cli_ai_roi_dora(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    canonical_dir = tmp_path / "canonical"
+    canonical_dir.mkdir(parents=True, exist_ok=True)
+    settings = Settings(canonical_dir=canonical_dir)
+    monkeypatch.setattr("gain.cli.get_settings", lambda: settings)
+
+    result = runner.invoke(app, ["ai-roi", "--dora", "--staff-size", "500"])
+    assert result.exit_code == 0
+    assert "Modeled AI Tooling ROI: 39.2%" in result.stdout
+    assert "Total First-Year Investment: $8,365,000.00" in result.stdout
+    assert "Total Annual Gross Value:    $11,646,000.00" in result.stdout
+
+
 def test_cli_dora(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     settings = Settings(
         data_dir=tmp_path,

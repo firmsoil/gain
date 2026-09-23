@@ -141,7 +141,7 @@ gain monthly-stats --canonical-path data/canonical/pull_requests__<run_id>.parqu
 The test suite validates contract interfaces, failure handling, concurrency safety, telemetry emission, and end-to-end analytical pipelines:
 
 ```bash
-# Run complete test suite (308 unit, integration, and contract tests)
+# Run complete test suite (310 unit, integration, and contract tests)
 pytest
 
 # Verify code style and formatting

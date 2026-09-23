@@ -141,3 +141,56 @@ metrics:
     interpretation: Monthly throughput and flow summary of PR lifecycle milestones.
     gaming_risk: low
 
+  - metric_id: GAIN-AI-001
+    metric_version: 1
+    name: developer_ai_adoption_intensity
+    category: ai_adoption
+    type: ratio
+    availability: direct
+    executive: true
+    formula: acceptances_count / suggestions_count
+    source_fields: [ai_telemetry.suggestions_count, ai_telemetry.acceptances_count, ai_telemetry.is_ai_active]
+    grain: developer_window
+    unit: percent
+    interpretation: Authoritative AI code acceptance rate and active developer adoption penetration.
+
+  - metric_id: GAIN-AI-002
+    metric_version: 1
+    name: ai_verification_tax
+    category: ai_friction
+    type: ratio
+    availability: direct
+    executive: true
+    formula: ai_cohort_review_duration / baseline_cohort_review_duration
+    source_fields: [pr.created_at, pr.merged_at, ai_telemetry.is_ai_active]
+    grain: repository_cohort
+    unit: ratio
+    interpretation: "Empirical verification tax: review latency multiplier on AI-generated code."
+
+  - metric_id: GAIN-AI-003
+    metric_version: 1
+    name: ai_instability_differential
+    category: ai_quality_risk
+    type: delta
+    availability: direct
+    executive: true
+    formula: ai_cohort_cfr - baseline_cohort_cfr
+    source_fields: [deployment.status, pr.merged_at]
+    grain: repository_period
+    unit: percent_delta
+    interpretation: "Instability tax: change failure rate delta attributable to AI code acceleration."
+
+  - metric_id: GAIN-AI-004
+    metric_version: 1
+    name: ai_experiment_frequency
+    category: innovation_optionality
+    type: count_rate
+    availability: direct
+    executive: true
+    formula: count(feature_branches_evaluated_in_period)
+    source_fields: [pr.created_at, pr.state]
+    grain: repository_period
+    unit: experiments_per_period
+    interpretation: "Optionality frequency: rate of prototyping and feature hypothesis exploration."
+
+
