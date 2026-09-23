@@ -2,6 +2,43 @@
 
 GAIN is a production-oriented Python data product for turning GitHub Pull Request telemetry into reproducible engineering-flow analytics.
 
+## Main Features
+
+GAIN transforms raw software engineering telemetry into verified operational intelligence, combining deterministic flow metrics with enterprise AI economic evaluation:
+
+- **Enterprise Telemetry Ingestion & Lossless Provenance**:
+  - High-throughput, distributed ingestion across 40,000+ repositories with `RedisWorkQueue` and bounded `InProcessQueue`.
+  - Immutable raw JSONL capture with strict provenance metadata enabling 100% offline replayability (`replay_run()`).
+  - Thread-safe GitHub App & PAT rotation with rate-limit telemetry and automatic exponential backoff (`GitHubTokenPool`).
+
+- **Deterministic, Zero-LLM Flow & DORA Metrics**:
+  - Pure Python deterministic calculations with zero LLM inference in the numerical calculation path.
+  - Formal metric catalog (`docs/metrics/metric-catalog.yaml`) defining `GAIN-PR-001` (Cycle Time) through `GAIN-PR-010` (Monthly Flow).
+  - Full DORA metrics suite: Deployment Frequency, Change Failure Rate (CFR), Lead Time for Changes, and Failed Deployment Recovery Time (FDRT).
+  - Cross-platform issue traceability linking Jira, Linear, and GitHub commits to PR lifecycle milestones.
+
+- **Google Cloud DORA 2026 AI ROI & Systemic Impact Engine**:
+  - Implementation of the two-ledger economic framework from Google Cloud DORA (*The ROI of AI-assisted Software Development*, 2026).
+  - **Investment Ledger**: Direct hard costs (licenses, tokens, training/enablement, infrastructure) plus explicit **J-Curve tuition cost** (planned adoption dip).
+  - **Value Ledger**: **Reclaimed headcount capacity** (net of verification tax), **accelerated feature optionality revenue**, and the **instability tax** (downtime risk from $\Delta\text{CFR}$).
+  - Asymmetric sensitivity scenarios (Conservative, Expected, Optimistic) and empirical **Verification Tax** cohort analysis.
+
+- **Governed Model Context Protocol (MCP) Server**:
+  - Production MCP Server (SDK v2, protocol `2026-07-28`) with dual transport (Streamable HTTP / SSE and `stdio`).
+  - 12 governed, read-only analytical tools and versioned resources (`gain://metrics/...`, `gain://lineage/...`).
+  - Enterprise security perimeter with Bearer authentication, granular RBAC (`Scope.METRICS_READ`, `Scope.INVESTIGATE`, `Scope.ADMIN`), and sliding-window rate limiting.
+
+- **Autonomous Intelligence Agent with 7-Tier Claim Classification**:
+  - Structured investigation planning (`AgentGateway`, `InvestigationPlanner`) with prompt-injection defense (`PolicyGuard`).
+  - Epistemic rigor with 7-tier claim classification: `Observed`, `Derived`, `Associated`, `Attributed`, `Modeled`, `Assumed`, `Unknown`.
+  - Cryptographically verifiable evidence packages backing every synthetic insight.
+
+- **Enterprise Concurrency, Security & Observability**:
+  - Atomic POSIX temporary file replacement (`UUID.tmp`) and `.compaction.lock` mutexes guaranteeing race-free storage and compaction.
+  - Ephemeral 256-bit PII salt, POSIX 0600 key permissions, and automatic regex token scrubbing in structured logs.
+  - Embedded Prometheus runtime metrics (`INGESTION_PAGES_TOTAL`, `GITHUB_RATE_LIMIT_REMAINING`, `MCP_REQUESTS_TOTAL`, etc.) and operational error runbooks.
+  - Unified operator CLI (`gain backfill`, `gain dora`, `gain ai-roi`, `gain ai-impact`, `gain agent`, `gain mcp`).
+
 ## First implemented vertical slice
 
 ```text
