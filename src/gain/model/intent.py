@@ -157,9 +157,7 @@ class CanonicalIntent(BaseModel):
             "aligned_specification": self.aligned_specification,
             "acceptance_criteria": self.acceptance_criteria,
             "synthesized_test_identifiers": self.synthesized_test_identifiers,
-            "dialogue_history_json": json.dumps(
-                [t.to_record() for t in self.dialogue_history]
-            ),
+            "dialogue_history_json": json.dumps([t.to_record() for t in self.dialogue_history]),
             "status": str(self.status.value),
             "epistemic_tier": str(self.epistemic_tier.value),
             "linked_pr_numbers": self.linked_pr_numbers,

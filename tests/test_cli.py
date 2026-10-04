@@ -287,4 +287,3 @@ def test_cli_bloat_command(tmp_path: Path) -> None:
         assert data["code_bloat"]["metric_id"] == "GAIN-QUAL-004"
     finally:
         set_settings_override(None)
-

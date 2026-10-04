@@ -75,9 +75,7 @@ class EngineeringIntelligenceAgent:
         )
 
         # 1. Plan creation & budget verification
-        plan = self.planner.create_plan(
-            query, ctx, default_repo=default_repo, intent=intent
-        )
+        plan = self.planner.create_plan(query, ctx, default_repo=default_repo, intent=intent)
         self.gateway.validate_plan_budget(len(plan.steps))
         audit_events.append(
             {

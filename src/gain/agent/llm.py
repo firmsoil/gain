@@ -150,9 +150,7 @@ class TieredReasoningProvider(ReasoningProvider):
         )
 
         if tier == ModelTier.LOCAL_EDGE:
-            return await self.edge_provider.synthesize_briefing(
-                intent, plan, claims, limitations
-            )
+            return await self.edge_provider.synthesize_briefing(intent, plan, claims, limitations)
         if tier == ModelTier.CLOUD_FRONTIER:
             return await self.frontier_provider.synthesize_briefing(
                 intent, plan, claims, limitations

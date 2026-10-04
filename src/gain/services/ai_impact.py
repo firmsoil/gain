@@ -258,9 +258,7 @@ class AIImpactService:
             ),
         ]
 
-        method = (
-            "Cohort refactoring and code bloat analysis (GAIN-QUAL-003, GAIN-QUAL-004)"
-        )
+        method = "Cohort refactoring and code bloat analysis (GAIN-QUAL-003, GAIN-QUAL-004)"
         return AIImpactResult(
             status="available",
             classification=ClaimClassification.ASSOCIATED,

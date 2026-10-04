@@ -67,9 +67,7 @@ class DomainCurriculum:
         matched_nodes = self.match_skills(intent_text)
         if not matched_nodes:
             # Fall back to base domain principles
-            matched_nodes = [
-                n for n in self.nodes.values() if n.node_type == "knowledge"
-            ]
+            matched_nodes = [n for n in self.nodes.values() if n.node_type == "knowledge"]
 
         sections: list[str] = [
             f"### Authoritative SE Curriculum Grounding [v{self.curriculum_version}]",
