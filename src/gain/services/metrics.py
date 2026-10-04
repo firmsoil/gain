@@ -12,6 +12,7 @@ import structlog
 
 from gain.config import Settings, get_settings
 from gain.metrics.catalog import MetricCatalog
+from gain.metrics.code_bloat import CodeBloatMetric, RefactoringRatioMetric
 from gain.metrics.cycle_time import CycleTimeMetric
 from gain.metrics.monthly_stats import MonthlyPRStats, MonthlyStatsMetric
 from gain.model.pr import PullRequest
@@ -232,4 +233,70 @@ class MetricService:
             methodology=(
                 "Pure Python deterministic percentile calculation (linear rank interpolation)."
             ),
+        )
+
+    def query_refactoring_ratio(
+        self,
+        repository: str | None = None,
+    ) -> MetricSummaryResult:
+        prs = self._load_canonical_prs(repository=repository)
+        observations = RefactoringRatioMetric.observations(prs)
+        summary = RefactoringRatioMetric.summary(observations, total_prs=len(prs))
+        sample = [
+            {
+                "pr_number": obs.pr_number,
+                "node_id": obs.github_node_id,
+                "repository": obs.repository_name_with_owner,
+                "refactoring_ratio": obs.refactoring_ratio,
+                "additive_ratio": obs.additive_ratio,
+                "is_pure_addition": obs.is_pure_addition,
+            }
+            for obs in observations[:10]
+        ]
+        data_freshness_utc = max(p.collected_at for p in prs).isoformat() if prs else None
+        return MetricSummaryResult(
+            metric_id=RefactoringRatioMetric.metric_id,
+            metric_version=RefactoringRatioMetric.metric_version,
+            metric_name="refactoring_vs_additive_churn_ratio",
+            repository=repository,
+            total_evaluated=len(prs),
+            merged_count=len(observations),
+            summary_stats=summary,
+            observations_sample=sample,
+            data_freshness_utc=data_freshness_utc,
+        )
+
+    def query_code_bloat(
+        self,
+        repository: str | None = None,
+        bloat_expansion_threshold: float = 100.0,
+    ) -> MetricSummaryResult:
+        prs = self._load_canonical_prs(repository=repository)
+        observations = CodeBloatMetric.observations(
+            prs, bloat_expansion_threshold=bloat_expansion_threshold
+        )
+        summary = CodeBloatMetric.summary(observations, total_prs=len(prs))
+        sample = [
+            {
+                "pr_number": obs.pr_number,
+                "node_id": obs.github_node_id,
+                "repository": obs.repository_name_with_owner,
+                "net_additions": obs.net_additions,
+                "changed_files": obs.changed_files,
+                "net_additions_per_file": obs.net_additions_per_file,
+                "is_bloat_flagged": obs.is_bloat_flagged,
+            }
+            for obs in observations[:10]
+        ]
+        data_freshness_utc = max(p.collected_at for p in prs).isoformat() if prs else None
+        return MetricSummaryResult(
+            metric_id=CodeBloatMetric.metric_id,
+            metric_version=CodeBloatMetric.metric_version,
+            metric_name="code_bloat_index",
+            repository=repository,
+            total_evaluated=len(prs),
+            merged_count=len(observations),
+            summary_stats=summary,
+            observations_sample=sample,
+            data_freshness_utc=data_freshness_utc,
         )

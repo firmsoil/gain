@@ -5,6 +5,14 @@ from gain.model.deployment import (
     DeploymentEnvironment,
     DeploymentStatus,
 )
+from gain.model.intent import (
+    CanonicalIntent,
+    ClarificationType,
+    EpistemicTier,
+    IntentSpeaker,
+    IntentStatus,
+    IntentTurn,
+)
 from gain.model.issue import (
     CanonicalIssue,
     IssueStatus,
@@ -25,4 +33,10 @@ __all__ = [
     "DeploymentEnvironment",
     "DeploymentStatus",
     "CanonicalCommit",
+    "CanonicalIntent",
+    "IntentTurn",
+    "IntentStatus",
+    "ClarificationType",
+    "IntentSpeaker",
+    "EpistemicTier",
 ]

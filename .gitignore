@@ -19,3 +19,4 @@ htmlcov/
 *.jsonl
 *.json
 !tests/fixtures/*.json
+*.pdf

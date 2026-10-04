@@ -238,3 +238,53 @@ def test_cli_ingest_adapters(tmp_path: Path) -> None:
         assert deploy_res.exit_code == 0
     finally:
         set_settings_override(None)
+
+
+def test_cli_bloat_command(tmp_path: Path) -> None:
+    from gain.config import set_settings_override
+
+    canonical_dir = tmp_path / "canonical"
+    canonical_dir.mkdir(parents=True, exist_ok=True)
+    settings = Settings(canonical_dir=canonical_dir)
+    set_settings_override(settings)
+
+    try:
+        prs = [
+            make_pr(
+                github_node_id="PR_B1",
+                number=10,
+                repository_name_with_owner="firmsoil/gain",
+                additions=200,
+                deletions=10,
+                changed_files=1,
+            ),
+            make_pr(
+                github_node_id="PR_B2",
+                number=11,
+                repository_name_with_owner="firmsoil/gain",
+                additions=40,
+                deletions=40,
+                changed_files=2,
+            ),
+        ]
+        write_canonical(prs, canonical_dir / "pull_requests__01.parquet")
+
+        # Human-readable output
+        res = runner.invoke(app, ["bloat", "--repo", "firmsoil/gain", "--threshold", "100"])
+        assert res.exit_code == 0
+        assert "GAIN-QUAL-003" in res.output
+        assert "GAIN-QUAL-004" in res.output
+        assert "Total PRs Evaluated: 2" in res.output
+
+        # JSON output
+        res_json = runner.invoke(
+            app, ["bloat", "--repo", "firmsoil/gain", "--threshold", "100", "--json"]
+        )
+        assert res_json.exit_code == 0
+        data = json.loads(res_json.output)
+        assert data["repository"] == "firmsoil/gain"
+        assert data["refactoring_ratio"]["metric_id"] == "GAIN-QUAL-003"
+        assert data["code_bloat"]["metric_id"] == "GAIN-QUAL-004"
+    finally:
+        set_settings_override(None)
+
