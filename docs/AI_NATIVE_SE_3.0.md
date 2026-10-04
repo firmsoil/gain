@@ -113,6 +113,13 @@ class CanonicalIntent(BaseModel):
 
 Persisted immutably to columnar Parquet via [`IntentStorage`](../src/gain/storage/intents.py) to enable full provenance reconstruction and post-mortem analysis.
 
+### 3.4 Automated CI/CD Quality Gate ("Break-the-Build")
+To prevent regressions from merging into production, GAIN embeds a deterministic quality gate directly into CI/CD pipelines:
+- **Engine**: [`gain.metrics.quality_gate.evaluate_quality_gate`](../src/gain/metrics/quality_gate.py)
+- **Workflow**: Automated GitHub Actions job (`se3-quality-gate`) in [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) and evaluation script [`scripts/evaluate_quality_gate.py`](../scripts/evaluate_quality_gate.py).
+- **Enforcement**: Evaluates `GAIN-QUAL-004` (Bloat $\le 25\%$), `GAIN-QUAL-003` (Refactor $\ge 10\%$), `GAIN-QUAL-005` (Friction $\le 30\%$), and `GAIN-QUAL-006` (Defect $\le 25\%$), breaking the build and blocking merge on violation.
+- **Reference**: See [`docs/CI_CD_QUALITY_GATE.md`](CI_CD_QUALITY_GATE.md) for full setup instructions across any target repository.
+
 ---
 
 ## 4. Pillar 2: Runtime.next — Compound FMware Architecture
@@ -176,15 +183,16 @@ Captures empirical feedback from human analysts to continuously improve agent pr
 
 ## 7. Verification & Operational Testing
 
-The entire SE 3.0 implementation is verified across 348 unit and integration tests:
+The entire SE 3.0 implementation is verified across 354 unit and integration tests:
 
 | Test Module | Coverage Area | Status |
 | :--- | :--- | :--- |
 | [`tests/test_code_bloat.py`](../tests/test_code_bloat.py) | Refactoring Ratio (`GAIN-QUAL-003`) & Code Bloat (`GAIN-QUAL-004`) calculations | 5/5 Passing |
 | [`tests/test_attribution_and_git_adapter.py`](../tests/test_attribution_and_git_adapter.py) | In-tree AI attribution trailers & local Git source adapter | 5/5 Passing |
 | [`tests/test_verification_and_defect_kpis.py`](../tests/test_verification_and_defect_kpis.py) | Verification Tax (`GAIN-QUAL-005`), Defect Rework (`GAIN-QUAL-006`) & `gain scan` CLI | 6/6 Passing |
+| [`tests/test_quality_gate.py`](../tests/test_quality_gate.py) | Deterministic CI/CD Quality Gate engine & CLI evaluation | 6/6 Passing |
 | [`tests/test_canonical_intent_model.py`](../tests/test_canonical_intent_model.py) | `CanonicalIntent` schema validation & Parquet serialization | 6/6 Passing |
 | [`tests/agent/test_sla_runtime.py`](../tests/agent/test_sla_runtime.py) | SLA slack budgeting, overrun detection, and tiered routing | 7/7 Passing |
 | [`tests/agent/test_alignment.py`](../tests/agent/test_alignment.py) | Conversational alignment sessions ($k \le 3$) and goal verifier | 6/6 Passing |
 | [`tests/test_curriculum_and_calibration.py`](../tests/test_curriculum_and_calibration.py) | Domain taxonomy compilation and closed-loop exemplar calibration | 5/5 Passing |
-| **Complete Test Suite** | Full regression and backwards compatibility | **348/348 Passing** |
+| **Complete Test Suite** | Full regression and backwards compatibility | **354/354 Passing** |
