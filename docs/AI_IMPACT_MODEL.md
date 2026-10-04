@@ -65,3 +65,20 @@ When measuring the difference in PR cycle time between AI-assisted authors and b
 1. **PR Size (Complexity)**: AI-generated code might increase the number of lines added, which naturally inflates code review latency. Comparing cohorts without normalizing for size bins ($<100$ lines, $100-500$ lines, $>500$ lines) creates distorted metrics.
 2. **Author Experience & Tenure**: High-adoption early adopters are often senior engineers who already merge PRs faster.
 3. **Reviewer Latency vs Author Latency**: Differentiating between author active work time and reviewer queue time to isolate where AI assistance actually intervened.
+
+---
+
+## 5. Detecting SE 2.0 Additive Churn Bias & Code Bloat (Hassan et al. 2026)
+
+As demonstrated by Hassan et al. in *Towards AI-Native Software Engineering* (ACM TOSEM 2026), AI assistants introduce a systemic **additive bias**: they accelerate code generation while depressing refactoring effort, accumulating technical debt and code bloat.
+
+To detect this pathology, GAIN incorporates two deterministic metrics into `AIImpactService.analyze_code_bloat_impact()`:
+
+### 5.1 Refactoring vs. Additive Churn Ratio (`GAIN-QUAL-003`)
+$$\text{RefactorRatio} = \frac{\text{Deleted Lines} + \text{Modified Lines}}{\text{Added Lines} + \text{Deleted Lines} + \epsilon}$$
+- **Interpretation**: Measures the proportion of churn dedicated to refactoring and simplification. Plunging ratios in AI-assisted cohorts indicate that teams are appending code rather than refining abstractions.
+
+### 5.2 Code Bloat Index (`GAIN-QUAL-004`)
+$$\text{NetAdditionsPerFile} = \frac{\text{Added Lines} - \text{Deleted Lines}}{\max(1, \text{Changed Files})}$$
+- **Interpretation**: Flags pull requests exceeding 100 net additions per modified file. Cohort comparisons assess whether AI adoption causes structural bloat and review fatigue.
+- **Reference**: See [`docs/AI_NATIVE_SE_3.0.md`](AI_NATIVE_SE_3.0.md) and [`docs/adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md`](adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md).
