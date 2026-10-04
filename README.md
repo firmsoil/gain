@@ -33,6 +33,14 @@ GAIN transforms raw software engineering telemetry into verified operational int
   - Epistemic rigor with 7-tier claim classification: `Observed`, `Derived`, `Associated`, `Attributed`, `Modeled`, `Assumed`, `Unknown`.
   - Cryptographically verifiable evidence packages backing every synthetic insight.
 
+- **AI-Native Software Engineering (SE 3.0) Runtime & Analytics**:
+  - Full implementation of architecture from *Towards AI-Native Software Engineering* (Hassan et al., ACM TOSEM 2026; see [`docs/AI_NATIVE_SE_3.0.md`](docs/AI_NATIVE_SE_3.0.md)).
+  - **Additive Bloat Trap Detection**: Deterministic Refactoring Ratio (`GAIN-QUAL-003`) and Code Bloat Index (`GAIN-QUAL-004`) to counter SE 2.0 assistant additive bias.
+  - **Intent Archiving (`CanonicalIntent`)**: Elevates human intent to an immutable first-class domain entity with Parquet storage.
+  - **Runtime.next SLA Governance**: Dynamic SLA slack budgeting (`SLABudgetTracker`) and tiered edge/frontier routing (`TieredModelRouter`).
+  - **Teammate.next Conversational Alignment**: Bounded ($k \le 3$) multi-turn intent elicitation and pre-flight goal verification (`IntentVerifier`).
+  - **FM.next Curriculum Engineering & Calibration Flywheel**: SWEBOK domain taxonomy (`DomainCurriculum`) and feedback-driven prompt calibration (`PromptCalibrationService`).
+
 - **Enterprise Concurrency, Security & Observability**:
   - Atomic POSIX temporary file replacement (`UUID.tmp`) and `.compaction.lock` mutexes guaranteeing race-free storage and compaction.
   - Ephemeral 256-bit PII salt, POSIX 0600 key permissions, and automatic regex token scrubbing in structured logs.
@@ -64,6 +72,7 @@ The complete system architecture and operational specifications are documented i
 * **Interactive Architecture Visualizer**: [`docs/architecture/gain_overall_architecture.html`](docs/architecture/gain_overall_architecture.html)
 * **Architecture Specification**: [`docs/OVERALL_ARCHITECTURE.md`](docs/OVERALL_ARCHITECTURE.md)
 * **Reference Architecture**: [`docs/REFERENCE_ARCHITECTURE.md`](docs/REFERENCE_ARCHITECTURE.md)
+* **AI-Native Software Engineering (SE 3.0) Architecture**: [`docs/AI_NATIVE_SE_3.0.md`](docs/AI_NATIVE_SE_3.0.md)
 * **Enterprise Security Architecture**: [`docs/architecture/security.md`](docs/architecture/security.md)
 * **Operational Error Catalog & Runbooks**: [`docs/errors/ERROR_CATALOG.md`](docs/errors/ERROR_CATALOG.md)
 
@@ -74,9 +83,9 @@ As detailed in the visual diagram above, the platform operates across 6 structur
 | Tier | Subsystem | Key Responsibilities & Invariants |
 | :--- | :--- | :--- |
 | **Tier 1** | **Multi-Source Telemetry Acquisition** | Verbatim raw capture into `RawStore` JSONL (`data/raw/...`); distributed work coordination via `RedisWorkQueue` / `InProcessQueue`; thread-safe token rotation (`GitHubTokenPool`). |
-| **Tier 2** | **Canonical Domain & Analytics Engine** | Transport-independent models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `AiDeveloperTelemetry`); concurrency-safe atomic Parquet writes (`.tmp.<uuid>`); deterministic pure Python metric engines (`GAIN-PR-001`, `GAIN-PR-010`, DORA, AI ROI). |
+| **Tier 2** | **Canonical Domain & Analytics Engine** | Transport-independent models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalIntent`, `AiDeveloperTelemetry`); concurrency-safe atomic Parquet writes (`.tmp.<uuid>`); deterministic pure Python metric engines (`GAIN-PR-001`, `GAIN-PR-010`, `GAIN-QUAL-003`, `GAIN-QUAL-004`, DORA, AI ROI). |
 | **Tier 3** | **Governed GAIN MCP Server** | Dual transport (`stdio` & Streamable HTTP / SSE); Bearer token auth, RBAC & rate limiting; 12 governed read-only analytical tools and versioned resources. |
-| **Tier 4** | **Autonomous Intelligence Agent** | `AgentGateway`, `InvestigationPlanner`, `PolicyGuard` prompt defense; primary GAIN MCP routing with circuit breaker; 7-tier claim classification (`Observed`, `Derived`, `Associated`, `Attributed`, `Modeled`, `Assumed`, `Unknown`). |
+| **Tier 4** | **Autonomous Intelligence Agent & Runtime** | `AgentGateway`, `InvestigationPlanner`, `PolicyGuard` prompt defense; Runtime.next SLA slack budgeting (`SLABudgetTracker`) & tiered model routing (`TieredModelRouter`); Teammate.next alignment (`AlignmentSession`) & goal verifier (`IntentVerifier`); FM.next curriculum grounding (`DomainCurriculum`) & prompt calibration (`PromptCalibrationService`). |
 | **Tier 5** | **Antigravity Multi-Agent Hub** | 6 persistent specialist subagents (`gain-architect`, `gain-data-engineer`, `gain-analytics-engineer`, `gain-platform-engineer`, `gain-security-engineer`, `gain-verification-engineer`); unified `gain` operator CLI. |
 | **Tier 6** | **Enterprise Cloud & Security** | Embedded Prometheus metrics registry; operational error runbooks; ephemeral 256-bit PII salt, POSIX 0600 key files, token redactors; production Kubernetes Helm charts with RWX shared storage (`efs-sc`). |
 
@@ -94,14 +103,15 @@ As detailed in the visual diagram above, the platform operates across 6 structur
 - `gain.adapters` — enterprise source adapters (Jira, Linear, CI/CD deployments).
 - `gain.github` — GraphQL/REST transport, retries, thread-safe token rotation (`GitHubTokenPool`), rate-limit telemetry.
 - `gain.sync` — backfill orchestration and atomic checkpointing.
-- `gain.storage` — replayable raw payloads (`RawStore`), concurrency-safe atomic Parquet writes (`UUID.tmp`), and `.compaction.lock` partition compaction.
-- `gain.model` — transport-independent canonical domain models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalCommit`, `AiDeveloperTelemetry`).
-- `gain.metrics` & `gain.services` — deterministic zero-LLM analytics engines (PR Cycle Time, Monthly Flow, AI Impact, 4-Stage AI ROI, DORA, Issue Velocity).
+- `gain.storage` — replayable raw payloads (`RawStore`), concurrency-safe atomic Parquet writes (`UUID.tmp`), partition compaction, and Parquet intent archival (`IntentStorage`).
+- `gain.model` — transport-independent canonical domain models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalCommit`, `CanonicalIntent`, `AiDeveloperTelemetry`).
+- `gain.metrics` & `gain.services` — deterministic zero-LLM analytics engines (PR Cycle Time, Monthly Flow, AI Impact, Refactoring Churn & Code Bloat, 4-Stage AI ROI, DORA, Issue Velocity).
+- `gain.curriculum` — SWEBOK/InstructLab hierarchical domain curriculum taxonomy (`DomainCurriculum`, `TaxonomyNode`).
 - `gain.telemetry` — embedded Prometheus metrics registry (`INGESTION_PAGES_TOTAL`, `GITHUB_RATE_LIMIT_REMAINING`, `MCP_REQUESTS_TOTAL`, etc.).
 - `gain.mcp` — governed Model Context Protocol (MCP) server over Streamable HTTP and Stdio.
-- `gain.agent` — autonomous Engineering Intelligence Agent with 7-tier claim classification.
+- `gain.agent` — autonomous Engineering Intelligence Agent with Runtime.next SLA slack tracking, tiered edge/frontier routing, conversational intent alignment, and pre-flight goal verification.
 - `gain.quality` — canonical data-quality validation.
-- `gain.cli` — unified operator CLI (`gain demo`, `gain backfill`, `gain dora`, `gain issues`, `gain agent`, `gain mcp`, `gain config-check`).
+- `gain.cli` — unified operator CLI (`gain demo`, `gain backfill`, `gain dora`, `gain bloat`, `gain issues`, `gain agent`, `gain mcp`, `gain config-check`).
 
 ## Requirements → Jira → SDD
 

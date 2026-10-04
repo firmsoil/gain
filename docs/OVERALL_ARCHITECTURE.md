@@ -80,6 +80,7 @@ flowchart TD
             CAN_PR["PullRequest\n(UTC normalized, State machine)"]:::blueTier
             CAN_ISSUE["CanonicalIssue\n(Key, Type, Status, Points)"]:::blueTier
             CAN_DEP["CanonicalDeployment\n(Env, SHA, Status, MTTR)"]:::blueTier
+            CAN_INTENT["CanonicalIntent\n(Prompt, Aligned Spec, Criteria, Turns)"]:::blueTier
             CAN_AI["AiDeveloperTelemetry\n(Dev ID, Suggestions, Accept Rate)"]:::blueTier
             CAN_COMMIT["CanonicalCommit\n(SHA, Author, Timestamps)"]:::blueTier
         end
@@ -88,6 +89,7 @@ flowchart TD
             ATOMIC_WRITES["Atomic Writes\n(UUID .tmp -> POSIX rename)"]:::greenTier
             COMPACTION_LOCK["Compactor\n(.compaction.lock Mutex Protection)"]:::greenTier
             CHECKPOINT_STORE["CheckpointStore\n(UUID-isolated atomic cursors)"]:::greenTier
+            INTENT_STORE[("Intent Parquet Store\ndata/canonical/intents/*.parquet")]:::greenTier
             PARQUET_STORE[("Canonical Parquet Datasets\ndata/canonical/*.parquet\n(Partitioned, Memory-Mapped)")]:::greenTier
         end
     end
@@ -102,7 +104,8 @@ flowchart TD
         subgraph Services["Analytical Calculation Services"]
             PR_CYCLE["CycleTimeMetric (GAIN-PR-001)\n(merged_at - created_at, p50..p95)"]:::blueTier
             MONTHLY_STATS["MonthlyStatsMetric (GAIN-PR-010)\n(Flow Balance Sheet Accounting)"]:::blueTier
-            AI_IMPACT["AIImpactService\n(Cohort Velocity Delta & Confounders)"]:::blueTier
+            BLOAT_METRIC["Refactoring & Code Bloat\n(GAIN-QUAL-003, GAIN-QUAL-004)"]:::blueTier
+            AI_IMPACT["AIImpactService\n(Cohort Velocity Delta, Bloat & Confounders)"]:::blueTier
             AI_ROI["AIROIService\n(4-Stage Economic ROI & Sensitivity)"]:::blueTier
             DORA_SVC["DORAService\n(Deployment Frequency, CFR, Lead Time)"]:::blueTier
             ISSUE_SVC["IssueAnalyticsService\n(Work Item Cycle Time & Traceability)"]:::blueTier
@@ -132,13 +135,19 @@ flowchart TD
     %% =========================================================================
     subgraph TIER5["Tier 5: Autonomous Engineering Intelligence Agent & Antigravity Hub"]
         direction TB
-        subgraph AgentCore["Agent Orchestrator (gain.agent.*)"]
+        subgraph AgentCore["Agent Orchestrator & SE 3.0 Runtime (gain.agent.*)"]
             AGENT_GATEWAY["AgentGateway\n(Step Budgeting, Request Tracking)"]:::purpleTier
+            ALIGNMENT_SESSION["AlignmentSession (Teammate.next)\n(Multi-Turn Dialogue, k<=3, Spec Elicitation)"]:::purpleTier
+            INTENT_VERIFIER["IntentVerifier\n(Pre-Flight Goal & Epistemic Verifier)"]:::purpleTier
             PLANNER["InvestigationPlanner\n(Flow Health, DORA, AI ROI Plans)"]:::purpleTier
+            SLA_TRACKER["SLABudgetTracker (Runtime.next)\n(DAG Slack Buffers, Overrun Auditing)"]:::purpleTier
+            TIERED_ROUTER["TieredModelRouter\n(Edge SLMs vs Cloud Frontier Models)"]:::purpleTier
             POLICY_GUARD["PolicyGuard\n(Prompt Injection Defense, Read-Only Boundary)"]:::purpleTier
             TOOL_ROUTER["ToolRouter\n(GAIN MCP Authoritative vs GitHub Operational)"]:::purpleTier
             SYNTHESIZER["EvidenceSynthesizer\n(7-Tier Epistemic Claim Classifier)"]:::purpleTier
             LLM_GATEWAY["LLMGateway\n(Briefing Synthesis from Evidence Packages)"]:::purpleTier
+            CURRICULUM["DomainCurriculum (FM.next)\n(Hierarchical SWEBOK Taxonomy)"]:::purpleTier
+            CALIBRATION["PromptCalibrationService\n(Closed-Loop Feedback Exemplar Flywheel)"]:::purpleTier
         end
 
         subgraph AntigravityTeam["Antigravity Specialist Subagent Ecosystem"]
@@ -151,7 +160,7 @@ flowchart TD
         end
 
         subgraph UserInterfaces["Developer & CLI Interfaces"]
-            CLI["gain CLI\n(demo, backfill, dora, issues, agent, mcp, config-check)"]:::greyCard
+            CLI["gain CLI\n(demo, backfill, dora, bloat, issues, agent, mcp, config-check)"]:::greyCard
             IDE["Antigravity IDE & Claude Desktop"]:::greyCard
         end
     end
