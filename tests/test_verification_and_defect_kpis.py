@@ -192,8 +192,16 @@ def test_cli_scan_command(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> No
     ]
     write_canonical(prs, canonical_dir / "prs.parquet")
 
-    settings = Settings(canonical_dir=canonical_dir)
+    settings = Settings(
+        raw_dir=tmp_path / "raw",
+        canonical_dir=canonical_dir,
+        metrics_dir=tmp_path / "metrics",
+        output_dir=tmp_path / "output",
+        data_dir=tmp_path / "data",
+    )
+    settings.ensure_directories()
     monkeypatch.setattr("gain.cli.get_settings", lambda: settings)
+    monkeypatch.setattr("gain.cli.scan.get_settings", lambda: settings)
 
     # 1. Markdown output
     result_md = runner.invoke(app, ["scan", ".", "--format", "markdown"])
