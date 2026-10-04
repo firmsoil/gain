@@ -76,6 +76,60 @@ gain scan owner/repo --days 90 --format markdown --out se3_scorecard.md
 gain scan https://github.com/owner/repo --format json
 ```
 
+## Deterministic CI/CD Quality Gate ("Break-the-Build")
+
+GAIN integrates into any CI/CD pipeline (GitHub Actions, GitLab CI, Jenkins) as an automated, deterministic quality gate that prevents AI-generated code bloat and review fatigue from degrading production branches:
+
+- **Mathematical Invariants**: Evaluates pure Python thresholds cataloged in `docs/metrics/metric-catalog.yaml` (`GAIN-QUAL-003` Refactoring Ratio $\ge 10\%$, `GAIN-QUAL-004` Code Bloat Index $\le 25\%$, `GAIN-QUAL-005` Verification Tax $\le 30\%$, `GAIN-QUAL-006` Defect Rework Rate $\le 25\%$).
+- **Zero-LLM Cost & Latency**: Runs offline in milliseconds without API keys, model latency, or hallucinations.
+- **Fail-Closed Gate & PR Feedback**: Emits GitHub Actions `::error::` annotations, blocks PR merge on violation, and posts interactive SE 3.0 scorecard summaries directly on PRs.
+
+### GitHub Actions Integration Example
+
+Drop this workflow into any repository at `.github/workflows/gain-quality-gate.yml`:
+
+```yaml
+name: "GAIN AI-Native Quality Gate"
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: "Install GAIN"
+        run: pip install git+https://github.com/firmsoil/gain.git
+
+      - name: "Scan Repository & Evaluate Gate"
+        run: |
+          gain scan . --format json > scorecard.json
+          python -c '
+          import json, sys
+          from gain.metrics import evaluate_quality_gate
+          with open("scorecard.json") as f:
+              data = json.load(f)
+          res = evaluate_quality_gate(data.get("quality_metrics", {}))
+          for v in res.violations:
+              print(f"::error::{v}")
+          sys.exit(0 if res.passed else 1)
+          '
+```
+
+> 📖 **Complete Integration Guide**: See [`docs/CI_CD_QUALITY_GATE.md`](docs/CI_CD_QUALITY_GATE.md) for custom thresholds, automated sticky PR comments, and multi-platform CI recipes.
+
 ## Architecture & Platform Design
 
 The GAIN platform architecture spans six operational tiers—from multi-source raw telemetry capture to deterministic analytics, governed MCP interfaces, autonomous evidence synthesis, and enterprise cloud infrastructure:
@@ -231,7 +285,7 @@ gain monthly-stats --canonical-path data/canonical/pull_requests__<run_id>.parqu
 The test suite validates contract interfaces, failure handling, concurrency safety, telemetry emission, and end-to-end analytical pipelines:
 
 ```bash
-# Run complete test suite (310 unit, integration, and contract tests)
+# Run complete test suite (354 unit, integration, and contract tests)
 pytest
 
 # Verify code style and formatting
