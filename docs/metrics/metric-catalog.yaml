@@ -226,5 +226,37 @@ metrics:
     interpretation: "Net addition density per changed file to detect boilerplate and verbose non-abstracted code typical of AI assistant generation."
     gaming_risk: medium
 
+  - metric_id: GAIN-QUAL-005
+    metric_version: 1
+    name: verification_tax_index
+    category: ai_flow_risk
+    type: distribution
+    availability: direct
+    executive: true
+    formula: review_latency_hours / max(1.0, total_churn / 100.0)
+    source_fields: [pr.created_at, pr.merged_at, pr.additions, pr.deletions]
+    grain: pr
+    unit: hours_per_hundred_lines
+    statistics: [count, p50, p75, p90, mean, high_friction_pr_count, high_friction_percentage]
+    filters: [merged_prs_only]
+    interpretation: "Evaluates whether code review and verification latency outstrips generation speedups, quantifying reviewer burden."
+    gaming_risk: medium
+
+  - metric_id: GAIN-QUAL-006
+    metric_version: 1
+    name: defect_rework_rate
+    category: ai_stability_risk
+    type: ratio
+    availability: direct
+    executive: true
+    formula: followup_rework_churn / max(1, total_churn)
+    source_fields: [pr.merged_at, pr.additions, pr.deletions, pr.author_login]
+    grain: pr
+    unit: ratio
+    statistics: [count, hotfix_pr_count, hotfix_percentage, total_followup_rework_churn, mean_rework_churn_per_pr]
+    filters: [merged_prs_only]
+    interpretation: "Deterministic calculation of post-merge defect remediation and follow-up rework within a 14-day operational window."
+    gaming_risk: low
+
 
 

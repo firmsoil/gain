@@ -34,10 +34,20 @@ class PullRequestBackfill:
         self._shutdown_requested = True
         log.info("sync_shutdown_requested")
 
-    def run(self, ingestion_run_id: str | None = None) -> dict[str, Any]:
+    def run(
+        self,
+        ingestion_run_id: str | None = None,
+        repositories: list[str] | None = None,
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> dict[str, Any]:
         self.settings.ensure_directories()
         self._shutdown_requested = False
         run_id = ingestion_run_id or str(uuid.uuid4())
+        target_repos = repositories if repositories is not None else self.settings.github_repos
+        window_start = start_at or self.settings.start_at
+        window_end = end_at or self.settings.end_at
+
         totals: dict[str, Any] = {
             "run_id": run_id,
             "repositories": 0,
@@ -57,7 +67,7 @@ class PullRequestBackfill:
                 prev_handlers[sig] = signal.signal(sig, _handle_signal)
 
         try:
-            for repository in self.settings.github_repos:
+            for repository in target_repos:
                 if self._shutdown_requested:
                     log.info("sync_aborted_before_repo", repository=repository)
                     break
@@ -69,11 +79,15 @@ class PullRequestBackfill:
                 for page in self.client.iter_pull_request_pages(
                     owner,
                     name,
-                    self.settings.start_at,
-                    self.settings.end_at,
+                    window_start,
+                    window_end,
                     start_cursor=cursor,
                 ):
-                    relevant = [node for node in page.nodes if self._in_window(node)]
+                    relevant = [
+                        node
+                        for node in page.nodes
+                        if self._in_window(node, window_start, window_end)
+                    ]
                     self.raw.append_page(
                         ingestion_run_id=run_id,
                         owner=owner,
@@ -117,9 +131,16 @@ class PullRequestBackfill:
             totals["shutdown_requested"] = True
         return totals
 
-    def _in_window(self, node: dict[str, Any]) -> bool:
+    def _in_window(
+        self,
+        node: dict[str, Any],
+        start_at: datetime | None = None,
+        end_at: datetime | None = None,
+    ) -> bool:
         created_raw = node.get("createdAt")
         if not isinstance(created_raw, str):
             return False
         created = parse_utc_datetime(created_raw)
-        return self.settings.start_at <= created <= self.settings.end_at
+        min_start = start_at or self.settings.start_at
+        max_end = end_at or self.settings.end_at
+        return min_start <= created <= max_end

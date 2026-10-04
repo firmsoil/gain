@@ -35,7 +35,8 @@ GAIN transforms raw software engineering telemetry into verified operational int
 
 - **AI-Native Software Engineering (SE 3.0) Runtime & Analytics**:
   - Full implementation of architecture from *Towards AI-Native Software Engineering* (Hassan et al., ACM TOSEM 2026; see [`docs/AI_NATIVE_SE_3.0.md`](docs/AI_NATIVE_SE_3.0.md)).
-  - **Additive Bloat Trap Detection**: Deterministic Refactoring Ratio (`GAIN-QUAL-003`) and Code Bloat Index (`GAIN-QUAL-004`) to counter SE 2.0 assistant additive bias.
+  - **Universal Repository Scanner (`gain scan`)**: One-command evaluation of any local Git clone or remote GitHub repository with in-tree attribution trailers (`Co-authored-by: GitHub Copilot`, `Cursor`, `Claude Code`, etc.).
+  - **Additive Bloat & Code Health**: Deterministic Refactoring Ratio (`GAIN-QUAL-003`), Code Bloat Index (`GAIN-QUAL-004`), Verification Tax (`GAIN-QUAL-005`), and Defect Rework Rate (`GAIN-QUAL-006`).
   - **Intent Archiving (`CanonicalIntent`)**: Elevates human intent to an immutable first-class domain entity with Parquet storage.
   - **Runtime.next SLA Governance**: Dynamic SLA slack budgeting (`SLABudgetTracker`) and tiered edge/frontier routing (`TieredModelRouter`).
   - **Teammate.next Conversational Alignment**: Bounded ($k \le 3$) multi-turn intent elicitation and pre-flight goal verification (`IntentVerifier`).
@@ -45,7 +46,7 @@ GAIN transforms raw software engineering telemetry into verified operational int
   - Atomic POSIX temporary file replacement (`UUID.tmp`) and `.compaction.lock` mutexes guaranteeing race-free storage and compaction.
   - Ephemeral 256-bit PII salt, POSIX 0600 key permissions, and automatic regex token scrubbing in structured logs.
   - Embedded Prometheus runtime metrics (`INGESTION_PAGES_TOTAL`, `GITHUB_RATE_LIMIT_REMAINING`, `MCP_REQUESTS_TOTAL`, etc.) and operational error runbooks.
-  - Unified operator CLI (`gain backfill`, `gain dora`, `gain ai-roi`, `gain ai-impact`, `gain agent`, `gain mcp`).
+  - Unified operator CLI (`gain scan`, `gain backfill`, `gain dora`, `gain ai-roi`, `gain ai-impact`, `gain agent`, `gain mcp`).
 
 ## First implemented vertical slice
 
