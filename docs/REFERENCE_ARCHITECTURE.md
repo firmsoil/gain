@@ -71,7 +71,7 @@ GitHub GraphQL / REST APIs
 8. **Negative Scope for Slice 1 vs. Enterprise Extension Packages**  
    The core vertical slice (Slice 1: Ingestion -> Raw JSONL -> Canonical Parquet -> Deterministic Cycle Time) strictly excludes non-deterministic heuristics and probabilistic models. To support Fortune 100 enterprise environments without contaminating the zero-LLM core, additional capabilities are decoupled into layered enterprise subsystems:
    - **Core Ingestion & Analytics Engine** (`gain.sync`, `gain.storage`, `gain.metrics`, `gain.services`, `gain.ingestion`): Pure Python deterministic computations, zero LLM, strictly verified.
-   - **Enterprise Protocol & Investigation Extensions** (`gain.mcp`, `gain.agent`, `gain.adapters`, `gain.requirements`): Optional enterprise integrations (Model Context Protocol server, investigative orchestration, Jira/Linear adapters) operating strictly downstream of canonical storage with isolated lifecycles.
+   - **Enterprise Protocol & Investigation Extensions** (`gain.mcp`, `gain.agent`, `gain.adapters`, `gain.attribution`, `gain.requirements`): Optional enterprise integrations (Model Context Protocol server, investigative orchestration, in-tree AI attribution, offline Git adapter, Jira/Linear adapters) operating strictly downstream of canonical storage with isolated lifecycles.
 
 ---
 

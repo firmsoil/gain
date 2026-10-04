@@ -81,4 +81,18 @@ $$\text{RefactorRatio} = \frac{\text{Deleted Lines} + \text{Modified Lines}}{\te
 ### 5.2 Code Bloat Index (`GAIN-QUAL-004`)
 $$\text{NetAdditionsPerFile} = \frac{\text{Added Lines} - \text{Deleted Lines}}{\max(1, \text{Changed Files})}$$
 - **Interpretation**: Flags pull requests exceeding 100 net additions per modified file. Cohort comparisons assess whether AI adoption causes structural bloat and review fatigue.
-- **Reference**: See [`docs/AI_NATIVE_SE_3.0.md`](AI_NATIVE_SE_3.0.md) and [`docs/adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md`](adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md).
+
+### 5.3 Verification Tax Index (`GAIN-QUAL-005`)
+$$\text{ReviewLatencyHours} = \frac{\text{merged\_at} - \text{created\_at}}{3600}$$
+- **Interpretation**: Measures the cognitive review tax and review queue friction of AI-generated code. Flags pull requests lingering $>48$ hours.
+
+### 5.4 Defect Rework & Fragility Rate (`GAIN-QUAL-006`)
+$$\text{DefectReworkRate} = \frac{\text{Follow-up Rework Churn in 14-Day Window}}{\text{Total Delivery Churn}}$$
+- **Interpretation**: Determines whether accelerated AI code delivery induces follow-up hotfix activity or post-merge regressions within a 14-day operational window.
+
+---
+
+## 6. Zero-Token In-Tree Attribution Fallback
+When enterprise API tokens for vendor seat assignment (e.g. Copilot API) are unavailable, `AIImpactService` automatically activates `gain.attribution.AIAttributionDetector` to extract in-tree commit trailers (`Co-authored-by: GitHub Copilot`, `Claude Code`, `Cursor`, `Codeium`) and recognized bot identities. This allows AI cohort analysis to execute against any Git repository without SaaS dependencies.
+
+- **Reference**: See [`docs/AI_NATIVE_SE_3.0.md`](AI_NATIVE_SE_3.0.md), [`docs/adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md`](adr/0050-ai-native-software-engineering-se-3-runtime-and-curriculum.md), and [`docs/adr/0051-universal-local-git-adapter-and-in-tree-attribution.md`](adr/0051-universal-local-git-adapter-and-in-tree-attribution.md).

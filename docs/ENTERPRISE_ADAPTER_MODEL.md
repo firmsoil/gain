@@ -157,3 +157,25 @@ When linking work items (`CanonicalIssue`) to code changes (`PullRequest`):
 - **Explicit Links**: If the issue payload explicitly contains the PR URL or branch reference, the link is classified as **`Observed`**.
 - **Inferred Pattern Matching**: If the link is established by regex pattern matching of the issue key (e.g. `PROJ-123`) in the PR branch name, PR title, or commit message, the claim is classified as **`Associated`**.
 - **Causal Claims**: Attributing cycle-time changes to specific work item management practices is classified as **`Attributed`** only under controlled experimental comparisons.
+
+---
+
+## 7. Universal Local Git Adapter & In-Tree AI Attribution
+
+### 7.1 LocalGitSourceAdapter (`src/gain/adapters/git_local.py`)
+Provides offline, tokenless repository ingestion directly from local Git working trees or bare clones:
+- **Execution Mechanism**: Invokes `git log --numstat` using zero-network local subprocess execution.
+- **Commit Parsing**: Extracts author metadata, UTC commit timestamps, file modification counts, additions, deletions, and commit messages into `CanonicalCommit` entities.
+- **PR Reconstruction**: Reconstructs PR-like delivery boundaries and durations from merge commit topologies (`Merge pull request #...` or `Merge branch '...'`).
+- **Storage**: Outputs directly to `data/canonical/commits__*.parquet` and `data/canonical/pull_requests__*.parquet`.
+
+### 7.2 In-Tree AI Attribution Detector (`src/gain/attribution/detector.py`)
+Extracts empirical AI adoption signals directly from Git metadata without external vendor API keys:
+- **Commit Trailers**: Scans for standardized trailer conventions:
+  - `Co-authored-by: GitHub Copilot <...>`
+  - `Co-authored-by: Claude <...>` / `Claude Code`
+  - `Generated with Cursor Composer` / `Cursor`
+  - `Co-authored-by: Codeium <...>`
+- **Author Identity Matching**: Matches known bot and assistant logins (`copilot-swe-kit`, `cursor-bot`, etc.).
+- **Telemetry Synthesis**: Synthesizes [`AiDeveloperTelemetry`](../src/gain/model/ai.py) records directly from Git evidence, feeding seamlessly into [`AIImpactService`](../src/gain/services/ai_impact.py) and [`AIROIService`](../src/gain/services/ai_roi.py).
+

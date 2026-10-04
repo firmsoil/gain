@@ -61,6 +61,21 @@ GitHub GraphQL API
 
 The implementation deliberately treats `createdAt -> mergedAt` as **observable PR lifecycle elapsed time**, not developer coding time.
 
+## Quickstart — One-Shot Repository Scanner
+
+Evaluate any local working copy or remote GitHub repository on-demand with zero configuration:
+
+```bash
+# 1. Scan current repository (zero token / air-gapped)
+gain scan .
+
+# 2. Scan remote repository and export executive Markdown scorecard
+gain scan owner/repo --days 90 --format markdown --out se3_scorecard.md
+
+# 3. Stream normalized JSON telemetry for CI/CD pipelines
+gain scan https://github.com/owner/repo --format json
+```
+
 ## Architecture & Platform Design
 
 The GAIN platform architecture spans six operational tiers—from multi-source raw telemetry capture to deterministic analytics, governed MCP interfaces, autonomous evidence synthesis, and enterprise cloud infrastructure:
@@ -83,11 +98,11 @@ As detailed in the visual diagram above, the platform operates across 6 structur
 
 | Tier | Subsystem | Key Responsibilities & Invariants |
 | :--- | :--- | :--- |
-| **Tier 1** | **Multi-Source Telemetry Acquisition** | Verbatim raw capture into `RawStore` JSONL (`data/raw/...`); distributed work coordination via `RedisWorkQueue` / `InProcessQueue`; thread-safe token rotation (`GitHubTokenPool`). |
-| **Tier 2** | **Canonical Domain & Analytics Engine** | Transport-independent models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalIntent`, `AiDeveloperTelemetry`); concurrency-safe atomic Parquet writes (`.tmp.<uuid>`); deterministic pure Python metric engines (`GAIN-PR-001`, `GAIN-PR-010`, `GAIN-QUAL-003`, `GAIN-QUAL-004`, DORA, AI ROI). |
+| **Tier 1** | **Multi-Source Telemetry Acquisition** | Verbatim raw capture into `RawStore` JSONL (`data/raw/...`); distributed work coordination via `RedisWorkQueue` / `InProcessQueue`; thread-safe token rotation (`GitHubTokenPool`); offline `LocalGitSourceAdapter` & in-tree `AIAttributionDetector`. |
+| **Tier 2** | **Canonical Domain & Analytics Engine** | Transport-independent models (`PullRequest`, `CanonicalIssue`, `CanonicalDeployment`, `CanonicalIntent`, `AiDeveloperTelemetry`); concurrency-safe atomic Parquet writes (`.tmp.<uuid>`); deterministic pure Python metric engines (`GAIN-PR-001`, `GAIN-PR-010`, `GAIN-QUAL-003`, `GAIN-QUAL-004`, `GAIN-QUAL-005`, `GAIN-QUAL-006`, DORA, AI ROI). |
 | **Tier 3** | **Governed GAIN MCP Server** | Dual transport (`stdio` & Streamable HTTP / SSE); Bearer token auth, RBAC & rate limiting; 12 governed read-only analytical tools and versioned resources. |
 | **Tier 4** | **Autonomous Intelligence Agent & Runtime** | `AgentGateway`, `InvestigationPlanner`, `PolicyGuard` prompt defense; Runtime.next SLA slack budgeting (`SLABudgetTracker`) & tiered model routing (`TieredModelRouter`); Teammate.next alignment (`AlignmentSession`) & goal verifier (`IntentVerifier`); FM.next curriculum grounding (`DomainCurriculum`) & prompt calibration (`PromptCalibrationService`). |
-| **Tier 5** | **Antigravity Multi-Agent Hub** | 6 persistent specialist subagents (`gain-architect`, `gain-data-engineer`, `gain-analytics-engineer`, `gain-platform-engineer`, `gain-security-engineer`, `gain-verification-engineer`); unified `gain` operator CLI. |
+| **Tier 5** | **Antigravity Multi-Agent Hub** | 6 persistent specialist subagents (`gain-architect`, `gain-data-engineer`, `gain-analytics-engineer`, `gain-platform-engineer`, `gain-security-engineer`, `gain-verification-engineer`); unified `gain` operator CLI (`gain scan`, `gain backfill`, `gain dora`, `gain bloat`). |
 | **Tier 6** | **Enterprise Cloud & Security** | Embedded Prometheus metrics registry; operational error runbooks; ephemeral 256-bit PII salt, POSIX 0600 key files, token redactors; production Kubernetes Helm charts with RWX shared storage (`efs-sc`). |
 
 #### Core Architectural Guarantees

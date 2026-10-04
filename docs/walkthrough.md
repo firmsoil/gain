@@ -112,3 +112,48 @@ tests/test_monthly_stats.py ......                                       [ 90%]
 tests/test_schema.py .                                                   [100%]
 ============================== 11 passed in 0.27s ==============================
 ```
+
+---
+
+## 5. Universal AI-Native SE 3.0 Scorecard Scanner Walkthrough
+
+GAIN provides a zero-token, single-command scanner (`gain scan`) to evaluate any local or remote repository:
+
+```bash
+# Scan local repository with terminal scorecard
+gain scan .
+
+# Scan remote repository with markdown export
+gain scan firmsoil/gain --days 90 --format markdown --out se3_scorecard.md
+
+# Scan with JSON output for pipeline automation
+gain scan firmsoil/gain --format json
+```
+
+### Sample Executive Output (`gain scan .`)
+
+```text
+=== GAIN AI-NATIVE SOFTWARE ENGINEERING (SE 3.0) SCORECARD ===
+Repository:               firmsoil/gain
+Evaluation Window:        90 days (Run ID: 6d6c6aef)
+----------------------------------------------------------------------
+1. AI ADOPTION & ATTRIBUTION TELEMETRY:
+   - Evaluated PRs:       22 (AI-Assisted: 4)
+   - AI Penetration Rate: 18.2%
+   - Detected Tools:      Copilot, Cursor Composer
+
+2. SE 2.0 BLOAT & CODE HEALTH (Hassan et al. 2026):
+   - Refactoring Ratio:   38.4% (Pure Adds: 12.5%)
+   - Code Bloat Index:    14.2 lines/file (4.5% flagged)
+
+3. FLOW & VERIFICATION TAX (DORA 2026):
+   - PR Cycle Time (p50): 18400.0s
+   - Review Latency Mean: 12.4 hrs (8.3% >48h)
+   - Hotfix / Defect Rate:4.2% of merged PRs
+
+4. ECONOMIC VALUE LEDGER (Two-Ledger Model):
+   - Net Economic Value:  $573,350.00
+   - Reclaimed Capacity:  $110,000.00
+----------------------------------------------------------------------
+```
+
