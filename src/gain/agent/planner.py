@@ -7,7 +7,10 @@ from uuid import uuid4
 
 import structlog
 
+from gain.agent.alignment import AlignmentSession
 from gain.agent.models import InvestigationContext, InvestigationPlan, PlanStep
+from gain.agent.verifier import IntentVerifier
+from gain.model.intent import CanonicalIntent
 
 logger = structlog.get_logger(__name__)
 
@@ -15,15 +18,29 @@ logger = structlog.get_logger(__name__)
 class InvestigationPlanner:
     """Creates deterministic and hypothesis-driven investigation plans."""
 
+    def __init__(self, verifier: IntentVerifier | None = None) -> None:
+        self.verifier = verifier or IntentVerifier()
+
+    def start_alignment_session(
+        self,
+        context: InvestigationContext | None = None,
+        default_repo: str = "firmsoil/gain",
+    ) -> AlignmentSession:
+        """Initialize an interactive multi-turn intent alignment session."""
+        return AlignmentSession(context=context, default_repo=default_repo)
+
     def create_plan(
         self,
         query: str,
         context: InvestigationContext,
         default_repo: str = "firmsoil/gain",
+        intent: CanonicalIntent | None = None,
     ) -> InvestigationPlan:
         """Analyze query intent and generate a structured InvestigationPlan."""
-        q_lower = query.lower()
-        repo = self._extract_repository(query) or default_repo
+        query_text = intent.raw_prompt if intent else query
+        q_lower = query_text.lower()
+        extracted = self._extract_repository(query_text)
+        repo = (intent.repository if intent else None) or extracted or default_repo
         plan_id = f"plan-{uuid4().hex[:8]}"
 
         steps: list[PlanStep] = []
@@ -53,11 +70,16 @@ class InvestigationPlanner:
         plan = InvestigationPlan(
             plan_id=plan_id,
             investigation_id=context.investigation_id,
-            intent=query,
+            intent=query_text,
             methodology=methodology,
             repository=repo,
             steps=steps,
         )
+
+        # Pre-flight goal verification against intent constraints (Compiler.next invariant)
+        is_valid, violations = self.verifier.verify_plan(plan, intent)
+        if not is_valid:
+            logger.info("plan_verification_violations", violations=violations)
 
         logger.info(
             "investigation_plan_created",
@@ -65,6 +87,7 @@ class InvestigationPlanner:
             investigation_id=plan.investigation_id,
             methodology=plan.methodology,
             step_count=len(plan.steps),
+            verified=is_valid,
         )
         return plan
 

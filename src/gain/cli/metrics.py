@@ -256,3 +256,59 @@ def register_metrics_commands(app: typer.Typer) -> None:
             typer.echo(f"Traceability Rate: {res.traceability_rate}%")
             for f in res.findings:
                 typer.echo(f"- {f}")
+
+    @app.command("bloat")
+    def cli_bloat(
+        repo: str = typer.Option(
+            "firmsoil/gain", "--repo", "-r", help="Target repository name with owner."
+        ),
+        threshold: float = typer.Option(
+            100.0, "--threshold", "-t", help="Net addition lines/file bloat flag threshold."
+        ),
+        json_output: bool = typer.Option(False, "--json", help="Output raw JSON payload."),
+    ) -> None:
+        """Evaluate Refactoring Ratio (GAIN-QUAL-003) and Code Bloat Index (GAIN-QUAL-004)."""
+        from gain.services.metrics import MetricService
+
+        configure_logging()
+        svc = MetricService()
+        refactor_res = svc.query_refactoring_ratio(repository=repo)
+        bloat_res = svc.query_code_bloat(repository=repo, bloat_expansion_threshold=threshold)
+
+        if json_output:
+            payload = {
+                "repository": repo,
+                "refactoring_ratio": {
+                    "metric_id": refactor_res.metric_id,
+                    "total_evaluated": refactor_res.total_evaluated,
+                    "summary": refactor_res.summary_stats,
+                },
+                "code_bloat": {
+                    "metric_id": bloat_res.metric_id,
+                    "total_evaluated": bloat_res.total_evaluated,
+                    "summary": bloat_res.summary_stats,
+                },
+            }
+            typer.echo(json.dumps(payload, indent=2))
+        else:
+            r_stats = refactor_res.summary_stats
+            b_stats = bloat_res.summary_stats
+            typer.echo(f"=== SE 2.0 Code Bloat & Refactoring Analysis for {repo} ===")
+            typer.echo(f"Total PRs Evaluated: {refactor_res.total_evaluated}")
+            typer.echo(
+                f"Aggregate Refactoring Ratio (GAIN-QUAL-003): "
+                f"{float(r_stats.get('aggregate_refactoring_ratio') or 0.0):.1%}"
+            )
+            typer.echo(
+                f"Pure Additions PRs: {r_stats.get('pure_addition_count')} "
+                f"({float(r_stats.get('pure_addition_percentage') or 0.0):.1f}%)"
+            )
+            typer.echo(
+                f"Mean Net Additions / File (GAIN-QUAL-004): "
+                f"{b_stats.get('mean_net_additions_per_file') or 0.0}"
+            )
+            typer.echo(
+                f"Bloat-Flagged PRs (> {threshold:.0f} lines/file): "
+                f"{b_stats.get('bloat_flag_count')} "
+                f"({float(b_stats.get('bloat_flag_percentage') or 0.0):.1f}%)"
+            )

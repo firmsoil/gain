@@ -193,4 +193,38 @@ metrics:
     unit: experiments_per_period
     interpretation: "Optionality frequency: rate of prototyping and feature hypothesis exploration."
 
+  - metric_id: GAIN-QUAL-003
+    metric_version: 1
+    name: refactoring_vs_additive_churn_ratio
+    category: ai_quality_risk
+    type: ratio
+    availability: direct
+    executive: true
+    formula: deletions / (additions + deletions)
+    source_fields: [pr.additions, pr.deletions]
+    grain: pr
+    unit: ratio
+    statistics: [count, p50, p75, p90, mean, aggregate_refactoring_ratio, pure_addition_count, pure_addition_percentage]
+    filters: [total_churn_gt_zero]
+    interpretation: "Deterministic ratio of deletions/modifications to total churn. Quantifies whether engineering effort refactors abstractions or exhibits SE 2.0 additive bloat."
+    misinterpretation: "Greenfield features naturally exhibit high additions; evaluate cohort shifts over time rather than individual PRs."
+    gaming_risk: medium
+
+  - metric_id: GAIN-QUAL-004
+    metric_version: 1
+    name: code_bloat_index
+    category: ai_quality_risk
+    type: distribution
+    availability: direct
+    executive: true
+    formula: net_additions / max(1, changed_files)
+    source_fields: [pr.additions, pr.deletions, pr.changed_files]
+    grain: pr
+    unit: lines_per_file
+    statistics: [count, p50, p75, p90, mean, bloat_flag_count, bloat_flag_percentage]
+    filters: [total_churn_gt_zero]
+    interpretation: "Net addition density per changed file to detect boilerplate and verbose non-abstracted code typical of AI assistant generation."
+    gaming_risk: medium
+
+
 
