@@ -60,6 +60,8 @@ flowchart TD
 
         subgraph Adapters["Resilient Source Adapters (gain.adapters.*)"]
             GH_CLIENT["GitHubGraphQLClient / AsyncGitHubClient\n(Backoff, Retries, Live Rate-Limit Quota Tap)"]:::blueTier
+            GIT_LOCAL["LocalGitSourceAdapter\n(Offline numstat / commit parsing)"]:::blueTier
+            ATTRIB_DET["AIAttributionDetector\n(In-tree Copilot, Claude, Cursor trailers)"]:::blueTier
             JIRA_ADAPT["JiraSourceAdapter\n(ADF / Markdown Mapping)"]:::blueTier
             LIN_ADAPT["LinearSourceAdapter\n(State & Cycle-Time Normalization)"]:::blueTier
             DEP_ADAPT["DeploymentSourceAdapter\n(Environment, Status, Duration)"]:::blueTier
@@ -105,6 +107,7 @@ flowchart TD
             PR_CYCLE["CycleTimeMetric (GAIN-PR-001)\n(merged_at - created_at, p50..p95)"]:::blueTier
             MONTHLY_STATS["MonthlyStatsMetric (GAIN-PR-010)\n(Flow Balance Sheet Accounting)"]:::blueTier
             BLOAT_METRIC["Refactoring & Code Bloat\n(GAIN-QUAL-003, GAIN-QUAL-004)"]:::blueTier
+            TAX_METRIC["Verification Tax & Defect Rework\n(GAIN-QUAL-005, GAIN-QUAL-006)"]:::blueTier
             AI_IMPACT["AIImpactService\n(Cohort Velocity Delta, Bloat & Confounders)"]:::blueTier
             AI_ROI["AIROIService\n(4-Stage Economic ROI & Sensitivity)"]:::blueTier
             DORA_SVC["DORAService\n(Deployment Frequency, CFR, Lead Time)"]:::blueTier
@@ -160,7 +163,7 @@ flowchart TD
         end
 
         subgraph UserInterfaces["Developer & CLI Interfaces"]
-            CLI["gain CLI\n(demo, backfill, dora, bloat, issues, agent, mcp, config-check)"]:::greyCard
+            CLI["gain CLI\n(scan, demo, backfill, dora, bloat, issues, agent, mcp, config-check)"]:::greyCard
             IDE["Antigravity IDE & Claude Desktop"]:::greyCard
         end
     end
