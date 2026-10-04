@@ -14,7 +14,9 @@ from gain.config import Settings, get_settings
 from gain.metrics.catalog import MetricCatalog
 from gain.metrics.code_bloat import CodeBloatMetric, RefactoringRatioMetric
 from gain.metrics.cycle_time import CycleTimeMetric
+from gain.metrics.defect_churn import DefectReworkMetric
 from gain.metrics.monthly_stats import MonthlyPRStats, MonthlyStatsMetric
+from gain.metrics.verification_tax import VerificationTaxMetric
 from gain.model.pr import PullRequest
 from gain.storage.analytics import read_canonical, scan_canonical
 
@@ -293,6 +295,72 @@ class MetricService:
             metric_id=CodeBloatMetric.metric_id,
             metric_version=CodeBloatMetric.metric_version,
             metric_name="code_bloat_index",
+            repository=repository,
+            total_evaluated=len(prs),
+            merged_count=len(observations),
+            summary_stats=summary,
+            observations_sample=sample,
+            data_freshness_utc=data_freshness_utc,
+        )
+
+    def query_verification_tax(
+        self,
+        repository: str | None = None,
+        high_friction_threshold_hours: float = 48.0,
+    ) -> MetricSummaryResult:
+        prs = self._load_canonical_prs(repository=repository)
+        observations = VerificationTaxMetric.observations(
+            prs, high_friction_threshold_hours=high_friction_threshold_hours
+        )
+        summary = VerificationTaxMetric.summary(observations, total_prs=len(prs))
+        sample = [
+            {
+                "pr_number": obs.pr_number,
+                "node_id": obs.github_node_id,
+                "repository": obs.repository_name_with_owner,
+                "review_latency_hours": obs.review_latency_hours,
+                "verification_tax_ratio": obs.verification_tax_ratio,
+                "is_high_friction": obs.is_high_friction,
+            }
+            for obs in observations[:10]
+        ]
+        data_freshness_utc = max(p.collected_at for p in prs).isoformat() if prs else None
+        return MetricSummaryResult(
+            metric_id=VerificationTaxMetric.metric_id,
+            metric_version=VerificationTaxMetric.metric_version,
+            metric_name="verification_tax_index",
+            repository=repository,
+            total_evaluated=len(prs),
+            merged_count=len(observations),
+            summary_stats=summary,
+            observations_sample=sample,
+            data_freshness_utc=data_freshness_utc,
+        )
+
+    def query_defect_rework(
+        self,
+        repository: str | None = None,
+        window_days: int = 14,
+    ) -> MetricSummaryResult:
+        prs = self._load_canonical_prs(repository=repository)
+        observations = DefectReworkMetric.observations(prs, window_days=window_days)
+        summary = DefectReworkMetric.summary(observations, total_prs=len(prs))
+        sample = [
+            {
+                "pr_number": obs.pr_number,
+                "node_id": obs.github_node_id,
+                "repository": obs.repository_name_with_owner,
+                "is_hotfix": obs.is_hotfix,
+                "followup_rework_count": obs.followup_rework_count,
+                "followup_rework_churn": obs.followup_rework_churn,
+            }
+            for obs in observations[:10]
+        ]
+        data_freshness_utc = max(p.collected_at for p in prs).isoformat() if prs else None
+        return MetricSummaryResult(
+            metric_id=DefectReworkMetric.metric_id,
+            metric_version=DefectReworkMetric.metric_version,
+            metric_name="defect_rework_rate",
             repository=repository,
             total_evaluated=len(prs),
             merged_count=len(observations),

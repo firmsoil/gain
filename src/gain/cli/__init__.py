@@ -10,6 +10,7 @@ from gain.cli.mcp import register_mcp_commands
 from gain.cli.metrics import register_metrics_commands
 from gain.cli.registry import register_registry_commands
 from gain.cli.requirements import register_requirements_commands
+from gain.cli.scan import register_scan_commands
 from gain.cli.sync import register_sync_commands
 from gain.config import Settings, get_settings
 from gain.logging import configure_logging
@@ -28,6 +29,7 @@ app.add_typer(maintenance_app, name="maintenance")
 
 # Register commands on respective apps
 register_sync_commands(app)
+register_scan_commands(app)
 register_metrics_commands(app)
 register_adapter_commands(app)
 register_mcp_commands(app)

@@ -29,7 +29,14 @@ def register_sync_commands(app: typer.Typer) -> None:
         typer.echo(f"window={settings.start_at.isoformat()}..{settings.end_at.isoformat()}")
 
     @app.command()
-    def backfill() -> None:
+    def backfill(
+        repo: str | None = typer.Option(
+            None, "--repo", "-r", help="Specific target repository (e.g. owner/name)."
+        ),
+        days: int | None = typer.Option(
+            None, "--days", "-d", help="Window duration in days ending now."
+        ),
+    ) -> None:
         """Backfill PRs from GitHub GraphQL into replayable raw storage."""
         configure_logging()
         settings = get_settings()
@@ -37,7 +44,22 @@ def register_sync_commands(app: typer.Typer) -> None:
         settings.ensure_directories()
         run_id = str(uuid.uuid4())
         structlog.contextvars.bind_contextvars(run_id=run_id)
-        result = PullRequestBackfill(settings, _build_client(settings)).run(ingestion_run_id=run_id)
+
+        target_repos = [repo] if repo else None
+        start_at = None
+        end_at = None
+        if days is not None and days > 0:
+            from datetime import UTC, datetime, timedelta
+
+            end_at = datetime.now(UTC)
+            start_at = end_at - timedelta(days=days)
+
+        result = PullRequestBackfill(settings, _build_client(settings)).run(
+            ingestion_run_id=run_id,
+            repositories=target_repos,
+            start_at=start_at,
+            end_at=end_at,
+        )
         typer.echo(json.dumps(result, indent=2, sort_keys=True))
 
     @app.command("sync")

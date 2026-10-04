@@ -353,7 +353,16 @@ class PartitionedReader:
             matching_files = all_parquet
 
         if matching_files:
-            return pl.scan_parquet([str(f) for f in matching_files], hive_partitioning=True)
+            valid_files: list[Path] = []
+            for f in matching_files:
+                try:
+                    schema = pl.read_parquet_schema(str(f))
+                    if len(schema) > 0:
+                        valid_files.append(f)
+                except Exception:
+                    continue
+            if valid_files:
+                return pl.scan_parquet([str(f) for f in valid_files], hive_partitioning=True)
 
         # 3. Directory exists but has no matching parquet files
         return pl.LazyFrame(schema=get_canonical_schema(entity_type))

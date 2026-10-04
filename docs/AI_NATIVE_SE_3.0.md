@@ -67,7 +67,32 @@ $$\text{NetAdditionsPerFile} = \frac{\text{Additions} - \text{Deletions}}{\max(1
 - **Threshold**: Flags PRs exceeding 100 net additions per file without accompanying architectural decomposition.
 - **CLI Access**: `gain bloat --owner firmsoil --repo gain`
 
-### 3.2 Intent Archiving Domain Entity (`CanonicalIntent`)
+#### Verification Tax Index (`GAIN-QUAL-005`)
+Measures code review friction and verification overhead introduced by AI-generated code:
+$$\text{ReviewLatencyHours} = \frac{\text{merged\_at} - \text{created\_at}}{3600}$$
+- **Implementation**: [`gain.metrics.verification_tax.VerificationTaxMetric`](../src/gain/metrics/verification_tax.py)
+- **High-Friction Threshold**: Flags reviews pending over 48 hours where verification tax exceeds cognitive thresholds.
+
+#### Defect Rework & Fragility Rate (`GAIN-QUAL-006`)
+Evaluates post-merge defect rework, regressions, and hotfix churn within a 14-day operational window:
+- **Implementation**: [`gain.metrics.defect_churn.DefectReworkMetric`](../src/gain/metrics/defect_churn.py)
+- **Fragility Signals**: Computes ratio of follow-up hotfix PRs and churn against total delivery volume.
+
+### 3.2 Universal Repository Scanner & In-Tree AI Attribution
+Enables GAIN to analyze any target repository (local Git repository or remote GitHub URL) on demand without external SaaS dependencies:
+- **In-Tree AI Attribution Detector**: [`gain.attribution.AIAttributionDetector`](../src/gain/attribution/detector.py) inspects Git commit trailers (`Co-authored-by: GitHub Copilot`, `Generated with Cursor`, `Claude Code`, etc.) and bot identities to synthesize verified developer telemetry.
+- **Local Git Source Adapter**: [`gain.adapters.LocalGitSourceAdapter`](../src/gain/adapters/git_local.py) parses Git histories and commit statistics offline.
+- **Unified CLI Scanner**:
+  ```bash
+  # Scan local working copy
+  gain scan .
+  
+  # Scan remote repository with custom format
+  gain scan owner/repo --format markdown --out scorecard.md
+  gain scan https://github.com/owner/repo --format json
+  ```
+
+### 3.3 Intent Archiving Domain Entity (`CanonicalIntent`)
 In SE 3.0, code is a synthesized projection of underlying human intent. GAIN elevates intent to an immutable first-class domain entity:
 
 ```python
@@ -151,13 +176,15 @@ Captures empirical feedback from human analysts to continuously improve agent pr
 
 ## 7. Verification & Operational Testing
 
-The entire SE 3.0 implementation is verified across 337 unit and integration tests:
+The entire SE 3.0 implementation is verified across 348 unit and integration tests:
 
 | Test Module | Coverage Area | Status |
 | :--- | :--- | :--- |
 | [`tests/test_code_bloat.py`](../tests/test_code_bloat.py) | Refactoring Ratio (`GAIN-QUAL-003`) & Code Bloat (`GAIN-QUAL-004`) calculations | 5/5 Passing |
+| [`tests/test_attribution_and_git_adapter.py`](../tests/test_attribution_and_git_adapter.py) | In-tree AI attribution trailers & local Git source adapter | 5/5 Passing |
+| [`tests/test_verification_and_defect_kpis.py`](../tests/test_verification_and_defect_kpis.py) | Verification Tax (`GAIN-QUAL-005`), Defect Rework (`GAIN-QUAL-006`) & `gain scan` CLI | 6/6 Passing |
 | [`tests/test_canonical_intent_model.py`](../tests/test_canonical_intent_model.py) | `CanonicalIntent` schema validation & Parquet serialization | 6/6 Passing |
 | [`tests/agent/test_sla_runtime.py`](../tests/agent/test_sla_runtime.py) | SLA slack budgeting, overrun detection, and tiered routing | 7/7 Passing |
 | [`tests/agent/test_alignment.py`](../tests/agent/test_alignment.py) | Conversational alignment sessions ($k \le 3$) and goal verifier | 6/6 Passing |
 | [`tests/test_curriculum_and_calibration.py`](../tests/test_curriculum_and_calibration.py) | Domain taxonomy compilation and closed-loop exemplar calibration | 5/5 Passing |
-| **Complete Test Suite** | Full regression and backwards compatibility | **337/337 Passing** |
+| **Complete Test Suite** | Full regression and backwards compatibility | **348/348 Passing** |

@@ -34,8 +34,23 @@ class AIImpactService:
         telemetry_records = load_ai_telemetry_for_repo(
             repo=repository, canonical_dir=self.settings.canonical_dir
         )
+        all_prs = self.metric_service._load_canonical_prs(repository=repository)
 
-        # 1. Check for authoritative developer telemetry
+        # 1. Check for authoritative developer telemetry, with in-tree attribution fallback
+        if not telemetry_records and all_prs:
+            from gain.attribution.detector import AIAttributionDetector
+            from gain.storage.ai_telemetry import write_ai_telemetry
+
+            detector = AIAttributionDetector()
+            synthesized = detector.synthesize_developer_telemetry(
+                repository=repository, prs=all_prs
+            )
+            if any(r.is_ai_active for r in synthesized):
+                safe_repo = repository.replace("/", "__")
+                target_path = self.settings.canonical_dir / f"ai_telemetry__{safe_repo}.parquet"
+                write_ai_telemetry(synthesized, target_path)
+                telemetry_records = synthesized
+
         if not telemetry_records:
             logger.info("ai_impact_insufficient_data", repository=repository)
             return AIImpactResult(
@@ -168,6 +183,21 @@ class AIImpactService:
         telemetry_records = load_ai_telemetry_for_repo(
             repo=repository, canonical_dir=self.settings.canonical_dir
         )
+        all_prs = self.metric_service._load_canonical_prs(repository=repository)
+
+        if not telemetry_records and all_prs:
+            from gain.attribution.detector import AIAttributionDetector
+            from gain.storage.ai_telemetry import write_ai_telemetry
+
+            detector = AIAttributionDetector()
+            synthesized = detector.synthesize_developer_telemetry(
+                repository=repository, prs=all_prs
+            )
+            if any(r.is_ai_active for r in synthesized):
+                safe_repo = repository.replace("/", "__")
+                target_path = self.settings.canonical_dir / f"ai_telemetry__{safe_repo}.parquet"
+                write_ai_telemetry(synthesized, target_path)
+                telemetry_records = synthesized
 
         if not telemetry_records:
             logger.info("ai_bloat_insufficient_data", repository=repository)
