@@ -10,6 +10,10 @@ from gain.metrics.defect_churn import (
     DefectReworkObservation,
 )
 from gain.metrics.monthly_stats import MonthlyPRStats, MonthlyStatsMetric
+from gain.metrics.quality_gate import (
+    QualityGateResult,
+    evaluate_quality_gate,
+)
 from gain.metrics.verification_tax import (
     VerificationTaxMetric,
     VerificationTaxObservation,
@@ -23,8 +27,10 @@ __all__ = [
     "DefectReworkObservation",
     "MonthlyPRStats",
     "MonthlyStatsMetric",
+    "QualityGateResult",
     "RefactoringRatioMetric",
     "RefactoringRatioObservation",
     "VerificationTaxMetric",
     "VerificationTaxObservation",
+    "evaluate_quality_gate",
 ]
