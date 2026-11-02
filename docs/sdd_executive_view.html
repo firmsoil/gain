@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Executive View: Agentic AI Software Factory</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body.acc { --a-rose:#fb7185; --a-violet:#a78bfa; --a-emerald:#34d399; --a-amber:#fbbf24; --a-indigo:#818cf8; --a-sky:#38bdf8; }
+    html.light body.acc { --a-rose:#be123c; --a-violet:#6d28d9; --a-emerald:#047857; --a-amber:#b45309; --a-indigo:#4338ca; --a-sky:#0369a1; }
+
+    .t-rose{color:var(--a-rose)} .t-violet{color:var(--a-violet)} .t-emerald{color:var(--a-emerald)}
+    .t-amber{color:var(--a-amber)} .t-indigo{color:var(--a-indigo)} .t-sky{color:var(--a-sky)}
+
+    .bg-emerald-soft{background:color-mix(in srgb,var(--a-emerald) 10%,transparent)}
+    .b-emerald-soft{border-color:color-mix(in srgb,var(--a-emerald) 45%,transparent)}
+    .row-alt{background:color-mix(in srgb,var(--background) 55%,transparent)}
+
+    .mat{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;border:1.5px solid;white-space:nowrap}
+    .mat::before{content:"";width:7px;height:7px;border-radius:999px;background:currentColor}
+    .mat-GA{color:var(--a-emerald);border-color:color-mix(in srgb,var(--a-emerald) 45%,transparent)}
+    .mat-Emerging{color:var(--a-amber);border-color:color-mix(in srgb,var(--a-amber) 45%,transparent)}
+    .mat-Research{color:var(--a-indigo);border-color:color-mix(in srgb,var(--a-indigo) 45%,transparent)}
+
+    /* Fullscreen 16:9 presentation scaling */
+    #wrap.presenting {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 100vh;
+      background: var(--background);
+      overflow: hidden;
+    }
+    #wrap.presenting #stage {
+      width: 1280px;
+      height: 720px;
+      max-width: none;
+      transform-origin: center center;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+  </style>
+</head>
+<body class="acc bg-[var(--background)] text-[var(--foreground)] antialiased p-4 md:p-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between gap-3 mb-3">
+      <span class="text-xs font-semibold text-[var(--muted-foreground)]">
+        Executive Slide (1 of 2) · Pair with Appendix A Deep Dive
+      </span>
+      <button onclick="goFull()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+        ⤢ Present 16:9 Fullscreen
+      </button>
+    </div>
+
+    <div id="wrap">
+      <div id="stage" class="bg-[var(--card)] border border-[var(--border)] rounded-2xl shadow-sm p-5 md:px-8 md:py-5 space-y-3">
+
+        <!-- Title & Maturity Legend -->
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-3 border-b border-[var(--border)]">
+          <div class="space-y-1">
+            <div class="text-xs font-bold uppercase tracking-widest text-[var(--muted-foreground)]">
+              Agentic AI Software Factory · Fortune 100 Governance Blueprint
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold tracking-tight leading-tight">
+              Every agent-written change: isolated, verified, provable.
+            </h1>
+            <p class="text-sm text-[var(--muted-foreground)]">
+              Six risks unique to autonomous coding agents, the architectural control that stops each, and the cryptographic evidence auditors receive.
+            </p>
+          </div>
+
+          <div class="flex flex-wrap lg:flex-col lg:items-end gap-2 lg:gap-1 shrink-0">
+            <div class="flex items-center gap-2">
+              <span class="mat mat-GA">GA</span>
+              <span class="text-xs text-[var(--muted-foreground)]">Production-ready today</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="mat mat-Emerging">Emerging</span>
+              <span class="text-xs text-[var(--muted-foreground)]">Standards forming · pilot now</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="mat mat-Research">Research</span>
+              <span class="text-xs text-[var(--muted-foreground)]">Track, don't depend (e.g., CaMeL)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Threat → Control → Evidence Matrix -->
+        <div class="rounded-xl border border-[var(--border)] overflow-hidden">
+          <div class="hidden md:grid md:grid-cols-[1.1fr_1.65fr_1.15fr_112px] bg-[var(--background)] text-xs font-bold uppercase tracking-wider border-b border-[var(--border)]">
+            <div class="px-4 py-2 t-rose">Agentic Threat</div>
+            <div class="px-4 py-2 t-violet">Architectural Control</div>
+            <div class="px-4 py-2 t-emerald">Auditor Evidence</div>
+            <div class="px-4 py-2 text-[var(--muted-foreground)]">Maturity</div>
+          </div>
+          <div id="rows" class="divide-y divide-[var(--border)]"></div>
+        </div>
+
+        <!-- Bottom Band: Board-Level Value Prop + Quarterly KPIs -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-7 rounded-xl border b-emerald-soft bg-emerald-soft px-4 py-3 space-y-1">
+            <div class="text-xs font-bold uppercase tracking-wider t-emerald">
+              The Board-Level Payoff: Instant Blast-Radius Containment
+            </div>
+            <div class="text-sm md:text-base font-semibold leading-snug">
+              "Which commits did model X, MCP tool Y, or harness image Z produce in the last 90 days?"
+            </div>
+            <div class="text-xs text-[var(--muted-foreground)]">
+              Answered in minutes from signed commit provenance—enabling targeted revocation and automated re-verification instead of weeks of incident forensics.
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 space-y-1.5">
+            <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
+              Quarterly Executive Risk &amp; Velocity KPIs
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs font-semibold">
+              <div>• Autonomous merge rate (%)</div>
+              <div>• Mean retries to green</div>
+              <div>• Post-merge holdout escape rate</div>
+              <div>• Time to blast-radius query</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer: Stack + Compliance Mapping -->
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 pt-2 border-t border-[var(--border)] text-xs text-[var(--muted-foreground)]">
+          <span><strong class="text-[var(--foreground)]">Built on:</strong> SPIFFE/SPIRE · HashiCorp Vault · Private Sigstore · SLSA v1.2 · Kata / gVisor on OCP · AKS · GKE</span>
+          <span><strong class="text-[var(--foreground)]">Aligned to:</strong> NIST SSDF 800-218A · OWASP LLM &amp; Agentic Top 10 · NIST AI RMF / ISO 42001</span>
+          <span class="font-semibold t-sky shrink-0">Technical Deep Dive → Appendix A</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ROWS = [
+      {
+        threat: "Hijacked agent steals credentials",
+        sub: "Prompt injection · poisoned install hooks",
+        control: "Zero credentials inside agent Kata/gVisor pods. An external broker holds per-run SPIFFE + Vault leases; CaMeL-style flow isolation tracked as defense-in-depth.",
+        evidence: "Every Git/tool call tied to a per-run identity in Vault & broker audit logs",
+        m: "GA",
+        extra: "Research"
+      },
+      {
+        threat: "Source code leaves the perimeter",
+        sub: "Unapproved models · vendor data retention",
+        control: "Enterprise AI Gateway enforces approved model allowlists, prompt DLP/secret redaction, and contractual zero data retention.",
+        evidence: "Prompt, response & model deployment fingerprints recorded per run",
+        m: "GA"
+      },
+      {
+        threat: "Malicious or hallucinated packages",
+        sub: "Slopsquatting · typosquats · install scripts",
+        control: "Curated internal package mirror only; lifecycle scripts disabled in sandbox; any new dependency triggers human approval.",
+        evidence: "Signed dependency diff and CycloneDX SBOM attested per PR",
+        m: "GA"
+      },
+      {
+        threat: "Agent games its own test suite",
+        sub: "Reward hacking · holdout exfiltration",
+        control: "Verifier orchestrator holds hidden holdouts; candidate code executes inside a separate credential-less detonation sandbox with exposure budgets.",
+        evidence: "Signed in-toto Test Result + SLSA Verification Summary (VSA)",
+        m: "Emerging"
+      },
+      {
+        threat: "Unreviewed or skewed code hits main",
+        sub: "Auto-merge risk · semantic merge conflicts",
+        control: "Tier 0/1 requires two human reviewers on spec + proof bundle; Tier 2/3 auto-merges on passing VSA after merge-queue re-verification on HEAD.",
+        evidence: "SLSA v1.2 Source VSA (Level 4 / Level 3) pinned to merge SHA",
+        m: "GA"
+      },
+      {
+        threat: "Model or MCP tool compromised later",
+        sub: "Backdoored weights · poisoned tool server",
+        control: "Org-defined agent-run provenance on every commit records model ID, prompt/tool-manifest hashes, and runner image digest.",
+        evidence: "Sub-5-minute blast-radius query → targeted revoke & re-verify",
+        m: "Emerging"
+      }
+    ];
+
+    document.getElementById("rows").innerHTML = ROWS.map((r, i) => `
+      <div class="grid grid-cols-1 md:grid-cols-[1.1fr_1.65fr_1.15fr_112px] gap-2 md:gap-0 items-center px-4 py-2 ${i % 2 ? "row-alt" : ""}">
+        <div>
+          <div class="text-xs md:text-[13.5px] font-bold leading-snug">${r.threat}</div>
+          <div class="text-xs t-rose mt-0.5">${r.sub}</div>
+        </div>
+        <div class="md:px-3 text-xs md:text-[13px] leading-snug">${r.control}</div>
+        <div class="md:px-3 text-xs leading-snug text-[var(--muted-foreground)]">${r.evidence}</div>
+        <div class="flex items-center gap-1.5 md:pl-2">
+          <span class="mat mat-${r.m}">${r.m}</span>
+        </div>
+      </div>`).join("");
+
+    function syncFull() {
+      const wrap = document.getElementById("wrap");
+      const stage = document.getElementById("stage");
+      const isFull = document.fullscreenElement === wrap;
+      if (isFull) {
+        wrap.classList.add("presenting");
+        const s = Math.min((window.innerWidth - 32) / 1280, (window.innerHeight - 32) / 720);
+        stage.style.transform = `scale(${s})`;
+      } else {
+        wrap.classList.remove("presenting");
+        stage.style.transform = "";
+      }
+    }
+
+    function goFull() {
+      const wrap = document.getElementById("wrap");
+      if (wrap.requestFullscreen) wrap.requestFullscreen();
+    }
+
+    window.addEventListener("resize", syncFull);
+    document.addEventListener("fullscreenchange", syncFull);
+  </script>
+</body>
+</html>

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Appendix A: Agentic SDLC Deep Dive (Identity, Blind Verification &amp; SLSA Provenance)</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    /* Accent palette: bright on dark themes, darker (WCAG AA) on light themes / projectors */
+    body.acc { --a-sky:#38bdf8; --a-violet:#a78bfa; --a-amber:#fbbf24; --a-emerald:#34d399; --a-indigo:#818cf8; --a-rose:#fb7185; }
+    html.light body.acc { --a-sky:#0369a1; --a-violet:#6d28d9; --a-amber:#b45309; --a-emerald:#047857; --a-indigo:#4338ca; --a-rose:#be123c; }
+
+    .t-sky{color:var(--a-sky)} .t-violet{color:var(--a-violet)} .t-amber{color:var(--a-amber)}
+    .t-emerald{color:var(--a-emerald)} .t-indigo{color:var(--a-indigo)} .t-rose{color:var(--a-rose)}
+
+    .b-sky{border-color:color-mix(in srgb,var(--a-sky) 45%,transparent)}
+    .b-violet{border-color:color-mix(in srgb,var(--a-violet) 45%,transparent)}
+    .b-amber{border-color:color-mix(in srgb,var(--a-amber) 45%,transparent)}
+    .b-emerald{border-color:color-mix(in srgb,var(--a-emerald) 45%,transparent)}
+    .b-indigo{border-color:color-mix(in srgb,var(--a-indigo) 45%,transparent)}
+    .b-rose{border-color:color-mix(in srgb,var(--a-rose) 45%,transparent)}
+
+    .bg-sky{background:color-mix(in srgb,var(--a-sky) 11%,transparent)}
+    .bg-violet{background:color-mix(in srgb,var(--a-violet) 11%,transparent)}
+    .bg-amber{background:color-mix(in srgb,var(--a-amber) 11%,transparent)}
+    .bg-emerald{background:color-mix(in srgb,var(--a-emerald) 11%,transparent)}
+    .bg-indigo{background:color-mix(in srgb,var(--a-indigo) 11%,transparent)}
+    .bg-rose{background:color-mix(in srgb,var(--a-rose) 11%,transparent)}
+
+    .ring-sky{box-shadow:0 0 0 2px var(--a-sky)} .ring-violet{box-shadow:0 0 0 2px var(--a-violet)}
+    .ring-amber{box-shadow:0 0 0 2px var(--a-amber)} .ring-emerald{box-shadow:0 0 0 2px var(--a-emerald)}
+    .ring-indigo{box-shadow:0 0 0 2px var(--a-indigo)} .ring-rose{box-shadow:0 0 0 2px var(--a-rose)}
+
+    .mat{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid;white-space:nowrap}
+    .mat::before{content:"";width:7px;height:7px;border-radius:999px;background:currentColor}
+    .mat-GA{color:var(--a-emerald);border-color:color-mix(in srgb,var(--a-emerald) 40%,transparent)}
+    .mat-Emerging{color:var(--a-amber);border-color:color-mix(in srgb,var(--a-amber) 40%,transparent)}
+    .mat-Research{color:var(--a-indigo);border-color:color-mix(in srgb,var(--a-indigo) 40%,transparent)}
+
+    .stage-card{transition:transform .18s ease, box-shadow .18s ease}
+    .stage-card:hover{transform:translateY(-2px)}
+  </style>
+</head>
+<body class="acc bg-[var(--background)] text-[var(--foreground)] antialiased p-6 md:p-8">
+  <div class="max-w-6xl mx-auto space-y-5">
+
+    <!-- ================= HEADER ================= -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
+      <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3 pb-4 border-b border-[var(--border)]">
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="px-2.5 py-1 rounded-md border bg-sky b-sky t-sky text-xs font-semibold">K8s Clouds (OCP • AKS • GKE)</span>
+          <span class="px-2.5 py-1 rounded-md border bg-indigo b-indigo t-indigo text-xs font-semibold">SPIFFE / SPIRE</span>
+          <span class="px-2.5 py-1 rounded-md border bg-violet b-violet t-violet text-xs font-semibold">HashiCorp Vault Ent. 1.21+ (<code>auth/spiffe</code>)</span>
+          <span class="px-2.5 py-1 rounded-md border bg-emerald b-emerald t-emerald text-xs font-semibold">SLSA v1.2 · Source L3/L4 → Build L3</span>
+        </div>
+        <div class="inline-flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[var(--background)] border border-[var(--border)] self-start xl:self-auto shrink-0">
+          <button onclick="setSpotlight('all')" id="btn-all" class="spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Full Architecture</button>
+          <button onclick="setSpotlight('tier0')" id="btn-tier0" class="spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Trust Roots</button>
+          <button onclick="setSpotlight('identity')" id="btn-identity" class="spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Identity Plane</button>
+          <button onclick="setSpotlight('spine')" id="btn-spine" class="spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold">Provenance Spine</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-center">
+        <div class="lg:col-span-5 space-y-1.5">
+          <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Appendix A · Deep Dive · No Static Secrets in Agent Workloads</div>
+          <h1 class="text-2xl md:text-3xl font-bold tracking-tight leading-tight">Agentic SDLC: Workload Identity, Blind Verification &amp; SLSA Provenance</h1>
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1 text-xs text-[var(--muted-foreground)]">
+            <span class="font-semibold text-[var(--foreground)]">Maturity:</span>
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap"><span class="mat mat-GA">GA</span><span>production-ready</span></span>
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap"><span class="mat mat-Emerging">Emerging</span><span>pilot now</span></span>
+            <span class="inline-flex items-center gap-1.5 whitespace-nowrap"><span class="mat mat-Research">Research</span><span>track only</span></span>
+          </div>
+        </div>
+        <div class="lg:col-span-7 lg:border-l lg:border-[var(--border)] lg:pl-6">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="p-3 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+              <div class="text-xs font-bold t-violet">1. Isolate the actor</div>
+              <div class="text-xs text-[var(--muted-foreground)] mt-0.5">Agents run in sandboxes with <strong>no reachable credentials</strong>. A broker acts on their behalf.</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+              <div class="text-xs font-bold t-amber">2. Verify blind</div>
+              <div class="text-xs text-[var(--muted-foreground)] mt-0.5">An independent verifier tests in a <strong>credential-less sandbox</strong> against hidden holdouts.</div>
+            </div>
+            <div class="p-3 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+              <div class="text-xs font-bold t-emerald">3. Prove lineage</div>
+              <div class="text-xs text-[var(--muted-foreground)] mt-0.5">Standard <strong>SLSA v1.2</strong> attestations plus org-defined agent-run records, pinned to the merge commit.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= TIER-0 TRUST ROOTS ================= -->
+    <section id="tier0" class="bg-[var(--card)] border-2 b-rose rounded-2xl p-4 md:p-5 shadow-sm transition-all space-y-3">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+        <div class="flex flex-wrap items-center gap-2.5">
+          <span class="px-2.5 py-1 rounded-md bg-rose t-rose text-xs font-bold uppercase tracking-wider">Tier-0 Trust Roots</span>
+          <span class="text-xs md:text-sm font-semibold">Whoever controls these five assets controls the entire factory</span>
+        </div>
+        <span class="text-xs text-[var(--muted-foreground)]">
+          <strong class="text-[var(--foreground)]">GitOps + two-person control</strong> · independent approvers · break-glass audited
+        </span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
+        <div class="px-3 py-2.5 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs font-semibold">1. SPIRE server &amp; registration entries</div>
+        <div class="px-3 py-2.5 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs font-semibold">2. Vault roles &amp; policies</div>
+        <div class="px-3 py-2.5 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs font-semibold">3. Holdout suite repository</div>
+        <div class="px-3 py-2.5 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs font-semibold">4. <code>constitution.md</code> &amp; SCM rulesets</div>
+        <div class="px-3 py-2.5 rounded-xl bg-[var(--background)] border border-[var(--border)] text-xs font-semibold">5. Private Sigstore (Fulcio · Rekor · TSA)</div>
+      </div>
+    </section>
+
+    <!-- ================= IDENTITY & CREDENTIAL BROKER PLANE ================= -->
+    <section id="identity" class="bg-[var(--card)] border-2 b-indigo rounded-2xl p-5 shadow-sm transition-all">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-3.5">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <span class="px-2.5 py-1 rounded-md bg-indigo t-indigo text-xs font-bold uppercase tracking-wider">Identity &amp; Credential Broker Plane</span>
+          <h2 class="text-sm md:text-base font-bold">SPIRE attests workloads → SVIDs go only to brokers → Vault issues per-run, repo-scoped leases</h2>
+        </div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" id="identity-steps"></div>
+      <div class="mt-3 pt-3 border-t border-[var(--border)] grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="text-[var(--muted-foreground)]"><strong class="t-rose">Trust ceiling = the node.</strong> A compromised node/kubelet can misreport workloads. Use hardware-rooted node attestation (TPM) or confidential nodes for Tier-0 repos.</div>
+        <div class="text-[var(--muted-foreground)]"><strong class="text-[var(--foreground)]">Fallback without Vault Enterprise:</strong> Vault JWT auth validating JWT-SVIDs via the SPIRE OIDC Discovery Provider.</div>
+      </div>
+    </section>
+
+    <!-- ================= STAGES ================= -->
+    <section class="space-y-3">
+      <div id="stages" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+
+      <div class="bg-[var(--card)] border border-dashed b-amber rounded-xl px-4 py-3 flex flex-col lg:flex-row lg:items-center gap-3">
+        <span class="px-2.5 py-1 rounded-md bg-amber t-amber text-xs font-bold shrink-0">↺ BUDGETED CONVERGENCE LOOP (Stage 03 → 02)</span>
+        <p class="text-xs text-[var(--muted-foreground)]">
+          <strong class="text-[var(--foreground)]">Typed, abstracted failure codes over mTLS.</strong> Each retry debits the holdout exposure budget and runs in a fresh K8s Job pod with a fresh lease. A circuit breaker escalates to the spec owner on oscillation or budget exhaustion.
+        </p>
+      </div>
+    </section>
+
+    <!-- ================= PROVENANCE SPINE ================= -->
+    <section id="spine" class="bg-[var(--card)] border-2 border-[var(--border)] rounded-2xl p-5 shadow-sm transition-all">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 mb-4">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <span class="px-2.5 py-1 rounded-md bg-emerald t-emerald text-xs font-bold uppercase tracking-wider">SLSA v1.2 Provenance Spine</span>
+          <h3 class="text-sm md:text-base font-bold">Standard attestations where they exist; clearly labelled org-defined predicates where they don't</h3>
+        </div>
+      </div>
+      <div id="spine-blocks" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+      <div class="mt-4 p-3 rounded-xl bg-emerald border b-emerald flex flex-col md:flex-row md:items-center gap-2 text-xs">
+        <span class="font-bold t-emerald shrink-0">Why it pays off: blast-radius query</span>
+        <span class="text-[var(--foreground)]">"Every commit written by model X, MCP server Y v1.4, or harness image Z in the last 90 days" → re-verify or revert in minutes, not weeks.</span>
+      </div>
+    </section>
+
+    <!-- ================= INSPECTOR ================= -->
+    <section class="bg-[var(--card)] border border-[var(--border)] rounded-2xl p-5 shadow-sm">
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-4">
+        <div class="xl:col-span-4 min-w-0 space-y-1.5">
+          <div id="insp-badge" class="inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase"></div>
+          <h3 id="insp-title" class="text-lg font-bold leading-snug"></h3>
+          <p id="insp-desc" class="text-xs text-[var(--muted-foreground)] leading-relaxed break-words"></p>
+        </div>
+        <div class="xl:col-span-8 grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div class="min-w-0 p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+            <div class="text-xs font-bold uppercase t-rose">Threat addressed</div>
+            <div id="insp-threat" class="text-xs mt-1.5 leading-relaxed [overflow-wrap:anywhere]"></div>
+          </div>
+          <div class="min-w-0 p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+            <div class="text-xs font-bold uppercase t-indigo">Identity &amp; credentials</div>
+            <div id="insp-identity" class="text-xs mt-1.5 leading-relaxed [overflow-wrap:anywhere]"></div>
+          </div>
+          <div class="min-w-0 p-3.5 rounded-xl bg-[var(--background)] border border-[var(--border)]">
+            <div class="text-xs font-bold uppercase t-emerald">Evidence emitted</div>
+            <div id="insp-evidence" class="text-xs mt-1.5 leading-relaxed [overflow-wrap:anywhere]"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FOOTER ================= -->
+    <footer class="text-xs text-[var(--muted-foreground)] flex flex-col md:flex-row md:items-center justify-between gap-2 px-1">
+      <span><strong class="text-[var(--foreground)]">Aligned to:</strong> NIST SSDF SP 800-218 &amp; 800-218A · SLSA v1.2 · OWASP Top 10 for LLM &amp; Agentic Apps · NIST AI RMF / ISO 42001</span>
+      <span>Scope: intent → merge. Build L3 provenance &amp; deploy admission are downstream.</span>
+    </footer>
+  </div>
+
+  <script>
+    const IDENTITY_STEPS = [
+      { n: 1, t: "Node attestation", s: "<code>k8s_psat</code> · cloud instance identity (GCP IIT / Azure MSI) · TPM for Tier-0 nodes", m: "GA" },
+      { n: 2, t: "Workload attestation", s: "<code>k8s</code> attestor via kubelet: namespace, service account, image digest (admission-pinned)", m: "GA" },
+      { n: 3, t: "SVID → broker only", s: "X.509-SVID (mTLS) · audience-scoped JWT-SVID. Never mounted into agent containers", m: "GA" },
+      { n: 4, t: "Vault <code>auth/spiffe</code> → lease", s: "Per-run, repo-scoped, minute-TTL lease tagged with <code>run_id</code> &amp; <code>spec_sha</code>", m: "GA", hl: true }
+    ];
+
+    const STAGES = [
+      {
+        id: 1, acc: "sky", label: "Stage 01", title: "Intent & Spec Normalization", badge: "Human sponsor (OIDC)",
+        items: [
+          { t: "constitution.md & spec.md", s: "Contracts, invariants & guardrails", m: "GA" },
+          { t: "Adversarial Spec Critic", s: "spiffe://corp.example/sdlc/spec-critic", m: "Emerging", hl: true },
+          { t: "plan.md & tasks.md", s: "Frozen read-only for all downstream agents", m: "GA" },
+          { t: "Sponsor delegation", s: "RFC 8693 token exchange · act claim (human → agent)", m: "Emerging" }
+        ],
+        footL: "↓ Spec-approval attestation", footR: "Delegated →",
+        insp: {
+          title: "Intent normalization with accountable human sponsorship",
+          desc: "Every agent run traces back to a named human sponsor. The approved spec and constitution are hashed and frozen read-only before any agent starts.",
+          threat: "Orphan agent actions; agents rewriting their own acceptance criteria; ambiguous specs reaching implementation.",
+          identity: "Sponsor authenticates via corporate OIDC. Delegation to the agent uses RFC 8693 token exchange with an act claim (emerging; IETF WIMSE / Transaction Tokens work in progress).",
+          evidence: "Org-defined spec-approval attestation: sponsor subject, critic SVID, SHA-256(constitution + spec)."
+        }
+      },
+      {
+        id: 2, acc: "violet", label: "Stage 02", title: "Bounded Agent Execution", badge: "…/coder/repo/<id>",
+        items: [
+          { t: "Agent pod: Kata / gVisor sandbox", s: "OpenShift sandboxed containers · AKS Pod Sandboxing · GKE Sandbox", m: "GA" },
+          { t: "No credentials reachable", s: "No SA token · no SPIRE socket · no Vault token · egress to broker only", m: "GA", hl: true },
+          { t: "Credential broker / MCP gateway", s: "Sole holder of SVID + lease; performs Git push & fetch under policy", m: "Emerging", hl: true },
+          { t: "AI Gateway", s: "Model allowlist · DLP & secret redaction · prompt hashes · zero retention", m: "GA" },
+          { t: "Dependency gate", s: "Curated mirror only · install scripts off · new dependency → human approval", m: "GA" },
+          { t: "CaMeL-style isolation", s: "Control/data-flow separation of untrusted context", m: "Research" }
+        ],
+        footL: "↓ Agent-run attestation", footR: "Candidate PR →",
+        insp: {
+          title: "Separate the actor from the credentials",
+          desc: "The agent executes arbitrary code (tests, builds, install hooks), so it must not be able to reach any credential. It runs in a Kata/gVisor pod. A broker holds the SVID and lease and performs Git, package and model calls for it. Run on self-hosted runners (Actions Runner Controller) or an in-house harness on your clusters; GitHub-hosted agents sit outside this trust boundary.",
+          threat: "Credential theft via prompt injection or poisoned dependencies; source-code exfiltration to unapproved models; hallucinated / slopsquatted packages.",
+          identity: "spiffe://corp.example/sdlc/coder/repo/<id> → Vault auth/spiffe → per-run, repo-scoped lease (run_id, spec_sha), held only by the broker. A compromised run cannot push to other repos.",
+          evidence: "Org-defined agent-run attestation: model provider / ID / deployment, system-prompt & tool-manifest hashes, harness image digest, AI-gateway request IDs, dependency diff."
+        }
+      },
+      {
+        id: 3, acc: "amber", label: "Stage 03", title: "Blind Verification", badge: "…/verifier",
+        items: [
+          { t: "Verifier orchestrator", s: "Holds holdout & twin leases · never runs candidate code", m: "GA", hl: true },
+          { t: "Credential-less detonation sandbox", s: "Separate pod · no SVID / Vault · default-deny egress · structured results only", m: "GA", hl: true },
+          { t: "Security & quality gates", s: "SAST · SCA · secret scan · license/snippet match · PBT & mutation", m: "GA" },
+          { t: "Formal proofs (Tier-0 only)", s: "TLA+ / SMT on critical state machines", m: "Emerging" },
+          { t: "Holdout exposure budget", s: "Retry & information caps · suite rotation · probing alerts", m: "Emerging" }
+        ],
+        footL: "↓ Test Result + VSA", footR: "Verified →",
+        insp: {
+          title: "Blind verification without trusting the code under test",
+          desc: "The orchestrator holds the holdouts and twin credentials but never executes candidate code. Candidate builds run in a separate credential-less sandbox that receives holdout inputs per call and returns only structured results.",
+          threat: "Reward hacking; holdout exfiltration by candidate code; adaptive probing of hidden tests through retry feedback.",
+          identity: "Disjoint Vault roles: only spiffe://…/verifier can read holdouts and twin leases. The detonation sandbox has no SVID, no Vault token and default-deny egress.",
+          evidence: "in-toto Test Result predicate + SLSA Verification Summary Attestation (VSA): suite version (never content), gate results, PBT seeds, HMAC'd Vault audit request IDs."
+        }
+      },
+      {
+        id: 4, acc: "emerald", label: "Stage 04", title: "Risk-Tiered Merge", badge: "…/merge-queue",
+        items: [
+          { t: "Tier 0/1 → SLSA Source L4", s: "Two humans review spec diff + proof bundle", m: "GA" },
+          { t: "Tier 2/3 → SLSA Source L3", s: "Auto-merge only on a passing VSA", m: "GA" },
+          { t: "Merge queue re-verifies", s: "Stage 03 gates re-run on the merged HEAD", m: "GA", hl: true },
+          { t: "App-bound required checks", s: "Accepted only from the verifier GitHub App · bypass logged & alerted", m: "GA" },
+          { t: "Signed merge → main", s: "gitsign via private Sigstore", m: "GA" }
+        ],
+        footL: "↓ Source VSA @ merge SHA", footR: "✓ Merged",
+        insp: {
+          title: "Risk-tiered merge mapped to SLSA Source levels",
+          desc: "Tier 0/1 changes require two human reviewers of the spec diff and proof bundle (Source L4). Tier 2/3 changes auto-merge only on a passing VSA (Source L3). The merge queue re-runs Stage 03 gates on the merged HEAD before landing.",
+          threat: "Unreviewed or semantically conflicting changes reaching main; spoofed status checks; silent ruleset bypass.",
+          identity: "spiffe://…/merge-queue signs via private Sigstore (Fulcio issuing against SPIFFE-OIDC). Required checks accepted only from the verifier GitHub App.",
+          evidence: "SLSA Source VSA pinned to the merge commit SHA, RFC 3161 timestamped. Build L3 provenance is produced downstream by the build platform."
+        }
+      }
+    ];
+
+    const SPINE = [
+      { acc: "sky", title: "1. Spec approval", pred: "https://corp.example/attestations/spec-approval/v1", kind: "org-defined",
+        lines: ["Sponsor OIDC subject + delegation chain", "Spec-critic SVID", "SHA-256(constitution + spec)"], stage: 1 },
+      { acc: "violet", title: "2. Agent run", pred: "https://corp.example/attestations/agent-run/v1", kind: "org-defined",
+        lines: ["Repo-scoped coder SVID + run ID", "Model provider · ID · deployment", "Prompt, tool-manifest & harness image digests", "AI-gateway request IDs + dependency diff"], stage: 2 },
+      { acc: "amber", title: "3. Verification", pred: "in-toto Test Result v0.1 + SLSA VSA v1", kind: "standard",
+        lines: ["Verifier SVID · holdout suite version (never content)", "Gate results & PBT seeds", "Vault audit request IDs (HMAC'd, no accessors)"], stage: 3 },
+      { acc: "emerald", title: "4. Merge seal", pred: "SLSA v1.2 Source VSA (L3 / L4)", kind: "standard",
+        lines: ["Pinned to merge commit SHA", "Private Sigstore: Fulcio (SPIFFE-OIDC) + Rekor", "RFC 3161 timestamp", "Build L3 provenance: downstream"], stage: 4 }
+    ];
+
+    const mat = m => `<span class="mat mat-${m}">${m}</span>`;
+    const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const fmtWrap = s => {
+      const tokens = [];
+      const tokenized = s.replace(/(spiffe:\/\/[^\s,)]+|auth\/spiffe|SHA-256\([^)]+\)|run_id|spec_sha)/g, m => {
+        const idx = tokens.push(
+          `<code class="font-mono font-semibold text-[var(--foreground)]">${esc(m).replace(/\//g, "/<wbr>")}</code>`
+        ) - 1;
+        return `\u0000${idx}\u0000`;
+      });
+      return esc(tokenized).replace(/\u0000(\d+)\u0000/g, (_, i) => tokens[Number(i)]);
+    };
+
+    // Identity steps
+    document.getElementById("identity-steps").innerHTML = IDENTITY_STEPS.map(x => `
+      <div class="p-3 rounded-xl border ${x.hl ? "bg-indigo b-indigo" : "bg-[var(--background)] border-[var(--border)]"} flex items-start gap-2.5">
+        <span class="px-2 py-0.5 rounded bg-indigo t-indigo text-xs font-bold shrink-0">${x.n}</span>
+        <div class="space-y-1">
+          <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-bold ${x.hl ? "t-indigo" : ""}">${x.t}</span>${mat(x.m)}</div>
+          <div class="text-xs text-[var(--muted-foreground)]">${x.s}</div>
+        </div>
+      </div>`).join("");
+
+    // Stage cards
+    document.getElementById("stages").innerHTML = STAGES.map(st => `
+      <article id="stage-card-${st.id}" onclick="selectStage(${st.id})"
+        class="stage-card cursor-pointer bg-[var(--card)] border b-${st.acc} rounded-2xl p-4 flex flex-col justify-between shadow-sm">
+        <div class="space-y-3">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-2 flex-wrap">
+              <span class="inline-block px-2 py-0.5 rounded-md bg-${st.acc} t-${st.acc} text-xs font-bold uppercase">${st.label}</span>
+              <span class="px-2 py-0.5 rounded bg-${st.acc} t-${st.acc} text-xs font-mono">${esc(st.badge)}</span>
+            </div>
+            <h2 class="text-base font-bold leading-snug">${st.title}</h2>
+          </div>
+          <div class="space-y-2">
+            ${st.items.map(it => `
+              <div class="min-w-0 p-2.5 rounded-lg border ${it.hl ? `bg-${st.acc} b-${st.acc}` : "bg-[var(--background)] border-[var(--border)]"}">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="text-xs font-semibold ${it.hl ? `t-${st.acc}` : ""}">${esc(it.t)}</div>${mat(it.m)}
+                </div>
+                <div class="text-xs text-[var(--muted-foreground)] mt-0.5 [overflow-wrap:anywhere]">${esc(it.s).replace(/\//g, "/<wbr>")}</div>
+              </div>`).join("")}
+          </div>
+        </div>
+        <div class="mt-4 pt-3 border-t border-[var(--border)] flex items-center justify-between text-xs">
+          <span class="font-semibold t-${st.acc}">${st.footL}</span>
+          <span class="font-bold text-[var(--muted-foreground)]">${st.footR}</span>
+        </div>
+      </article>`).join("");
+
+    // Spine blocks
+    document.getElementById("spine-blocks").innerHTML = SPINE.map(b => `
+      <div onclick="selectStage(${b.stage})" class="cursor-pointer p-3.5 rounded-xl bg-[var(--background)] border b-${b.acc} transition space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-xs font-bold t-${b.acc}">${b.title}</span>
+          <span class="text-xs font-semibold px-1.5 py-0.5 rounded ${b.kind === "standard" ? "bg-emerald t-emerald" : "bg-amber t-amber"}">${b.kind}</span>
+        </div>
+        <div class="text-xs font-mono text-[var(--muted-foreground)] break-words">${b.pred.replace(/\//g, "/<wbr>")}</div>
+        <ul class="text-xs space-y-1">${b.lines.map(l => `<li>• ${esc(l)}</li>`).join("")}</ul>
+      </div>`).join("");
+
+    function selectStage(id) {
+      const st = STAGES.find(s => s.id === id);
+      STAGES.forEach(s => {
+        const c = document.getElementById(`stage-card-${s.id}`);
+        c.classList.remove("ring-sky", "ring-violet", "ring-amber", "ring-emerald");
+      });
+      document.getElementById(`stage-card-${id}`).classList.add(`ring-${st.acc}`);
+      const b = document.getElementById("insp-badge");
+      b.className = `inline-block px-2.5 py-0.5 rounded text-xs font-bold uppercase bg-${st.acc} t-${st.acc}`;
+      b.textContent = `${st.label} · ${st.title}`;
+      document.getElementById("insp-title").textContent = st.insp.title;
+      document.getElementById("insp-desc").textContent = st.insp.desc;
+      document.getElementById("insp-threat").innerHTML = fmtWrap(st.insp.threat);
+      document.getElementById("insp-identity").innerHTML = fmtWrap(st.insp.identity);
+      document.getElementById("insp-evidence").innerHTML = fmtWrap(st.insp.evidence);
+    }
+
+    function setSpotlight(mode) {
+      const ON = "spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm transition";
+      const OFF = "spot-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition";
+      ["all", "tier0", "identity", "spine"].forEach(m => document.getElementById(`btn-${m}`).className = (m === mode ? ON : OFF));
+      const map = { tier0: ["tier0", "ring-rose"], identity: ["identity", "ring-indigo"], spine: ["spine", "ring-emerald"] };
+      Object.values(map).forEach(([id, r]) => document.getElementById(id).classList.remove(r));
+      if (map[mode]) {
+        const [id, r] = map[mode];
+        const el = document.getElementById(id);
+        el.classList.add(r);
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+
+    setSpotlight("all");
+    selectStage(2);
+  </script>
+</body>
+</html>
